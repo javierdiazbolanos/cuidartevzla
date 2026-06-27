@@ -1,0 +1,6 @@
+{
+  "name": "Cuídarte Venezuela",
+  "description": "Aplicación de búsqueda de pacientes hospitalizados y medicamentos disponibles tras el sismo de junio de 2026 en Venezuela.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
