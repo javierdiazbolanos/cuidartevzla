@@ -3,8 +3,8 @@ import { Hospital, Paciente, PacienteDetalle, Insumo, Transporte } from './types
 export const MOCK_HOSPITALES: Hospital[] = [
   { id: 1, nombre: 'Hospital Universitario de Caracas (HUC)', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4897, lng: -66.8894, telefono: '(0212) 605-4050' },
   { id: 2, nombre: 'Hospital Dr. José María Vargas', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5173, lng: -66.9189, telefono: '(0212) 862-9965' },
-  { id: 3, nombre: 'Hospital Miguel Pérez Carreño', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4820, lng: -66.9610, telefono: '(0212) 472-8472' },
-  { id: 4, nombre: 'Hospital Dr. Domingo Luciani', municipio: 'Sucre', estado: 'Miranda', lat: 10.4862, lng: -66.8153, telefono: '(0212) 205-6501' },
+    { id: 3, nombre: 'Hospital Dr. Miguel Pérez Carreño', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4820, lng: -66.9610, telefono: '(0212) 472-8472' },
+    { id: 4, nombre: 'Hospital Dr. Domingo Luciani', municipio: 'Sucre', estado: 'Miranda', lat: 10.4862, lng: -66.8153, telefono: '(0212) 205-6501' },
   { id: 5, nombre: 'Hospital Central de Maracay', municipio: 'Girardot', estado: 'Aragua', lat: 10.2522, lng: -67.5819, telefono: null },
   { id: 6, nombre: 'Hospital Universitario Dr. Ángel Larralde', municipio: 'Valencia', estado: 'Carabobo', lat: 10.2241, lng: -68.0163, telefono: null },
   { id: 7, merge_original: true, nombre: 'Hospital Universitario de Maracaibo', municipio: 'Maracaibo', estado: 'Zulia', lat: 10.6728, lng: -71.6353, telefono: null } as any, // Mantener id: 7
@@ -22,7 +22,7 @@ export const MOCK_HOSPITALES: Hospital[] = [
   { id: 17, nombre: 'Hospital Dr. Miguel Óraá', municipio: 'Guanare', estado: 'Portuguesa', lat: 9.0414, lng: -69.7483, telefono: null },
   { id: 18, nombre: 'Hospital Universitario Dr. Pedro Emilio Carrillo', municipio: 'Valera', estado: 'Trujillo', lat: 9.3178, lng: -70.6033, telefono: null },
   { id: 19, nombre: 'Hospital Dr. Luis Razetti (Barinas)', municipio: 'Barinas', estado: 'Barinas', lat: 8.6225, lng: -70.2119, telefono: null },
-  { id: 20, nombre: 'Hospital Dr. José María Vargas (La Guaira)', municipio: 'Vargas', estado: 'La Guaira', lat: 10.5983, lng: -66.9322, telefono: '(0212) 227-1468' },
+  { id: 20, nombre: 'Hospital Dr. José María Vargas — IVSS La Guaira', municipio: 'Vargas', estado: 'La Guaira', lat: 10.5983, lng: -66.9322, telefono: '(0212) 227-1468' },
   { id: 21, nombre: 'Hospital Dr. Israel Ranuárez Balza', municipio: 'Juan Germán Roscio', estado: 'Guárico', lat: 9.9114, lng: -67.3581, telefono: null },
   { id: 22, nombre: 'Hospital Dr. Egor Nucete', municipio: 'Ezequiel Zamora', estado: 'Cojedes', lat: 9.6533, lng: -68.5833, telefono: null },
   { id: 23, nombre: 'Hospital Dr. Pablo Acosta Ortiz', municipio: 'San Fernando', estado: 'Apure', lat: 7.8933, lng: -67.4722, telefono: null },
@@ -37,8 +37,8 @@ export const MOCK_HOSPITALES: Hospital[] = [
   { id: 32, nombre: 'Hospital Dr. de Niños J.M. de los Ríos', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5103, lng: -66.9031, telefono: '(0212) 574-3511' },
 
   // Nuevos centros reportados con teléfonos de emergencia confirmados por el usuario
-  { id: 33, nombre: 'Clinica CCCT', municipio: 'Chacao', estado: 'Miranda', lat: 10.4912, lng: -66.8375, telefono: '(0212) 959-6444' },
-  { id: 34, nombre: 'Clinica El Ávila', municipio: 'Chacao', estado: 'Miranda', lat: 10.4968, lng: -66.8450, telefono: '(0212) 276-1111' },
+  { id: 33, nombre: 'Clínica CCCT', municipio: 'Chacao', estado: 'Miranda', lat: 10.4912, lng: -66.8375, telefono: '(0212) 959-6444' },
+  { id: 34, nombre: 'Clínica El Ávila', municipio: 'Chacao', estado: 'Miranda', lat: 10.4968, lng: -66.8450, telefono: '(0212) 276-1111' },
   { id: 35, nombre: 'Cruz Roja Venezolana — Sede La Candelaria (Caracas)', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5042, lng: -66.9001, telefono: '(0212) 571-4380' },
   { id: 36, nombre: 'Grupo Médico Santa Paula', municipio: 'Baruta', estado: 'Miranda', lat: 10.4632, lng: -66.8322, telefono: '(0212) 917-6200' },
   { id: 37, nombre: 'Hospital Ana Francisca Pérez de León II (Petare)', municipio: 'Sucre', estado: 'Miranda', lat: 10.4795, lng: -66.8054, telefono: '(0212) 256-8448' },
@@ -48,12 +48,13 @@ export const MOCK_HOSPITALES: Hospital[] = [
   { id: 41, nombre: 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5284, lng: -66.9382, telefono: '(0212) 870-2266' },
   { id: 42, nombre: 'Hospital Periférico de Coche', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4674, lng: -66.9312, telefono: '(0212) 681-1133' },
   { id: 43, nombre: 'Materno Infantil del Valle (Hugo Chávez Frías)', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4578, lng: -66.8924, telefono: '(0212) 671-5902' },
-  { id: 44, nombre: 'Policlinica La Arboleda', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5124, lng: -66.9015, telefono: '(0212) 550-1811' },
-  { id: 45, nombre: 'Policlinica Santiago de León', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4905, lng: -66.8682, telefono: '(0212) 762-9025' },
-  { id: 46, nombre: 'Policlinica David Lobo', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5050, lng: -66.9080, telefono: '(0212) 541-5465' },
-  { id: 47, nombre: 'Policlinica Las Mercedes', municipio: 'Baruta', estado: 'Miranda', lat: 10.4815, lng: -66.8612, telefono: '(0212) 993-2323' },
-  { id: 48, nombre: 'Sede del Sebin (La Guaira)', municipio: 'Vargas', estado: 'La Guaira', lat: 10.5925, lng: -66.9410, telefono: '(0212) 506-4444' },
-  { id: 49, nombre: 'Hospital General de Misiones Nuevas Generaciones Hugo Chávez (IVSS)', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4950, lng: -66.9110, telefono: null }
+  { id: 44, nombre: 'Policlínica La Arboleda', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5124, lng: -66.9015, telefono: '(0212) 550-1811' },
+  { id: 45, nombre: 'Policlínica Santiago de León', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4905, lng: -66.8682, telefono: '(0212) 762-9025' },
+  { id: 46, nombre: 'Policlínica David Lobo', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5050, lng: -66.9080, telefono: '(0212) 541-5465' },
+  { id: 47, nombre: 'Policlínica Las Mercedes', municipio: 'Baruta', estado: 'Miranda', lat: 10.4815, lng: -66.8612, telefono: '(0212) 993-2323' },
+  { id: 48, nombre: 'Sede del Sebin (La Guaira)', municipio: 'Vargas', estado: 'La Guaira', lat: 10.5925, lng: -66.9410, telefono: '(0212) 541-7656' },
+  { id: 49, nombre: 'IVSS — Hospital General de Misiones Nuevas Generaciones Hugo Chávez', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4950, lng: -66.9110, telefono: '(0212) 801-1000' },
+  { id: 50, nombre: 'Clínica Canes', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5064, lng: -66.9309, telefono: '(0212) 471-4848' }
 ];
 
 export const MOCK_PACIENTES: PacienteDetalle[] = [

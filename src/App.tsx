@@ -10,6 +10,7 @@ import PacienteDetailModal from './components/PacienteDetailModal';
 import MedicamentoCard from './components/MedicamentoCard';
 import MedicamentoDetailModal from './components/MedicamentoDetailModal';
 import TransporteCard from './components/TransporteCard';
+import HospitalCard from './components/HospitalCard';
 import { 
   Search, 
   Filter, 
@@ -22,11 +23,12 @@ import {
   MapPin, 
   X,
   AlertCircle,
-  Car
+  Car,
+  Building2
 } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'pacientes' | 'insumos' | 'transporte'>('pacientes');
+  const [activeTab, setActiveTab] = useState<'pacientes' | 'insumos' | 'transporte' | 'hospitales'>('pacientes');
   
   // Datos principales
   const [hospitales, setHospitales] = useState<Hospital[]>([]);
@@ -52,6 +54,11 @@ export default function App() {
   const [debouncedTransporteQuery, setDebouncedTransporteQuery] = useState('');
   const [transporteSelectedCiudad, setTransporteSelectedCiudad] = useState<string>('');
   const [transporteSoloDisponibles, setTransporteSoloDisponibles] = useState<boolean>(false);
+
+  // Estados de filtros de Hospitales (Directorio)
+  const [hospitalesQuery, setHospitalesQuery] = useState('');
+  const [debouncedHospitalesQuery, setDebouncedHospitalesQuery] = useState('');
+  const [hospitalesSelectedEstado, setHospitalesSelectedEstado] = useState<string>('');
 
   // Formularios de registro y gestión de transporte
   const [showRegisterTransportForm, setShowRegisterTransportForm] = useState<boolean>(false);
@@ -344,6 +351,15 @@ export default function App() {
       clearTimeout(handler);
     };
   }, [transporteQuery, dataSaver]);
+
+  // 3.6. Debounce dinámico de búsqueda de Hospitales
+  useEffect(() => {
+    const delay = dataSaver ? 800 : 350;
+    const handler = setTimeout(() => {
+      setDebouncedHospitalesQuery(hospitalesQuery);
+    }, delay);
+    return () => { clearTimeout(handler); };
+  }, [hospitalesQuery, dataSaver]);
 
   // 4. Búsqueda de Pacientes reactiva a filtros
   useEffect(() => {
@@ -1261,6 +1277,146 @@ export default function App() {
 
           </div>
         )}
+
+        {/* =====================================
+            PESTAÑA 4: DIRECTORIO DE HOSPITALES
+           ===================================== */}
+        {activeTab === 'hospitales' && (() => {
+          // Filtrado en memoria de hospitales
+          const q = debouncedHospitalesQuery.toLowerCase().trim();
+          const filteredHospitales = hospitales.filter(h => {
+            if (q && !h.nombre.toLowerCase().includes(q) && 
+                !(h.municipio && h.municipio.toLowerCase().includes(q)) &&
+                !(h.estado && h.estado.toLowerCase().includes(q))) {
+              return false;
+            }
+            if (hospitalesSelectedEstado && h.estado !== hospitalesSelectedEstado) {
+              return false;
+            }
+            return true;
+          });
+
+          // Lista de estados únicos para el filtro
+          const estadosUnicos = [...new Set(
+            hospitales.map(h => h.estado).filter(Boolean)
+          )].sort();
+
+          return (
+            <div className="space-y-6">
+              {/* Panel de Búsqueda */}
+              <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-4">
+                <div className="flex items-center justify-between gap-2 flex-wrap pb-1 border-b border-slate-50">
+                  <span className="text-xs font-bold text-slate-500">Directorio de Centros Hospitalarios</span>
+                  <span className="text-xs font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-lg flex items-center gap-1.5 font-mono">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-sky-500"></span>
+                    </span>
+                    📢 {hospitales.length} centros registrados
+                  </span>
+                </div>
+
+                {/* Buscador */}
+                <div className="relative">
+                  <Search className="absolute left-4.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <input
+                    ref={inputTransporteRef}
+                    type="text"
+                    placeholder="Busca por nombre del hospital, clínica o municipio..."
+                    value={hospitalesQuery}
+                    onChange={(e) => setHospitalesQuery(e.target.value)}
+                    className="w-full pl-12 pr-4 py-4 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm font-semibold text-slate-800 placeholder-slate-400 transition-all bg-slate-50/50"
+                    style={{ minHeight: '48px' }}
+                  />
+                  {hospitalesQuery && (
+                    <button 
+                      onClick={() => setHospitalesQuery('')} 
+                      className="absolute right-4.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Filtro por Estado */}
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-extrabold uppercase text-slate-400 font-mono tracking-wider">
+                    Filtrar por Estado:
+                  </span>
+                  <div className="flex overflow-x-auto pb-1.5 sm:pb-0 sm:flex-wrap gap-1.5 pt-1 scroll-smooth -mx-1 px-1 [scrollbar-width:none]">
+                    <button
+                      onClick={() => setHospitalesSelectedEstado('')}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                        hospitalesSelectedEstado === ''
+                          ? 'bg-sky-600 text-white border-sky-600 shadow-md shadow-sky-100'
+                          : 'bg-white text-slate-600 border-slate-150 hover:bg-slate-50'
+                      }`}
+                      style={{ minHeight: '36px' }}
+                    >
+                      Todos
+                    </button>
+                    {estadosUnicos.map((estado) => (
+                      <button
+                        key={estado}
+                        onClick={() => setHospitalesSelectedEstado(
+                          hospitalesSelectedEstado === estado ? '' : estado
+                        )}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer whitespace-nowrap ${
+                          hospitalesSelectedEstado === estado
+                            ? 'bg-sky-600 text-white border-sky-600 shadow-md shadow-sky-100'
+                            : 'bg-white text-slate-600 border-slate-150 hover:bg-slate-50'
+                        }`}
+                        style={{ minHeight: '36px' }}
+                      >
+                        {estado}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Listado de Hospitales */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                  <h2 className="text-sm font-bold text-slate-500 font-mono uppercase tracking-wider">
+                    {loading ? 'Cargando...' : `Centros (${filteredHospitales.length})`}
+                  </h2>
+                  {loading && (
+                    <span className="w-4 h-4 border-2 border-sky-600 border-t-transparent rounded-full animate-spin"></span>
+                  )}
+                </div>
+
+                {hospitales.length === 0 && !loading ? (
+                  <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center space-y-3 shadow-sm max-w-lg mx-auto">
+                    <div className="w-14 h-14 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center text-slate-400 mx-auto">
+                      <Building2 className="w-7 h-7" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900 font-display">Cargando directorio...</h3>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
+                      Conectando con la base de datos de hospitales. Si tarda mucho, revisa tu conexión.
+                    </p>
+                  </div>
+                ) : filteredHospitales.length === 0 && !loading ? (
+                  <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center space-y-3 shadow-sm max-w-lg mx-auto">
+                    <div className="w-14 h-14 bg-amber-50 border border-amber-100 rounded-full flex items-center justify-center text-amber-500 mx-auto">
+                      <Search className="w-7 h-7" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900 font-display">Sin resultados</h3>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
+                      No encontramos centros que coincidan con "{hospitalesQuery}". Prueba con otro nombre, municipio o estado.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3">
+                    {filteredHospitales.map((hospital) => (
+                      <HospitalCard key={hospital.id} hospital={hospital} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
       </main>
 
