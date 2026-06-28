@@ -4,6 +4,24 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+
+  /* Custom palette: Deep Royal Blue of Venezuela based on the brand logo (#002f87) */
+  --color-sky-50: #f0f4fc;
+  --color-sky-100: #dbe5f7;
+  --color-sky-200: #becef1;
+  --color-sky-300: #93b0e7;
+  --color-sky-400: #628bdb;
+  --color-sky-500: #3b65cd;
+  --color-sky-600: #002f87; /* Deep Royal Blue */
+  --color-sky-700: #002670;
+  --color-sky-800: #001f5c;
+  --color-sky-900: #001744;
+  --color-sky-950: #000c26;
+
+  /* Brand Accents */
+  --color-brand-blue: #002f87;
+  --color-brand-yellow: #fdc82f;
+  --color-brand-red: #cf142b;
 }
 
 @layer base {

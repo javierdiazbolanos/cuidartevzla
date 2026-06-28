@@ -14,7 +14,7 @@ export default function HospitalComboBox({
   hospitales,
   selectedId,
   onChange,
-  placeholder = 'Buscar centro médico...',
+  placeholder = 'Buscar hospital...',
   id = 'hospital-combobox'
 }: HospitalComboBoxProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -94,7 +94,7 @@ export default function HospitalComboBox({
             <Building2 className={`w-4 h-4 shrink-0 ${selectedHospital ? 'text-sky-600' : 'text-slate-400'}`} />
             <span className="truncate">
               {selectedHospital 
-                ? `${selectedHospital.nombre} (${selectedHospital.estado || 'S.I.'})` 
+                ? `${selectedHospital.nombre} (${selectedHospital.estado || 'Sin info'})` 
                 : placeholder
               }
             </span>
@@ -131,7 +131,7 @@ export default function HospitalComboBox({
               id={`${id}-search-input`}
               type="text"
               autoFocus
-              placeholder="Filtre por nombre, estado o municipio..."
+              placeholder="Filtra por nombre, estado o municipio..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-transparent border-0 py-2.5 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none font-semibold"
@@ -158,13 +158,13 @@ export default function HospitalComboBox({
                 selectedId === null ? 'text-sky-700 bg-sky-50/50' : 'text-slate-600'
               }`}
             >
-              <span>-- Todos los Hospitales / Cobertura Completa --</span>
+              <span>-- Todos los Hospitales --</span>
               {selectedId === null && <Check className="w-4 h-4 text-sky-600" />}
             </button>
 
             {estadosOrdenados.length === 0 ? (
               <div className="p-6 text-center text-slate-400 font-medium">
-                Sin coincidencias encontradas
+                No conseguimos ningún hospital
               </div>
             ) : (
               estadosOrdenados.map(estado => (

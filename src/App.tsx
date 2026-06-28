@@ -55,6 +55,10 @@ export default function App() {
   // Modo de Datos Bajos para redes inestables (Venezuela)
   const [dataSaver, setDataSaver] = useState<boolean>(() => isDataSaverEnabled());
 
+  // Refs para enfocar automáticamente el buscador de cada pestaña
+  const inputPacientesRef = React.useRef<HTMLInputElement>(null);
+  const inputMedicamentosRef = React.useRef<HTMLInputElement>(null);
+
   // Categorías fijas de Medicamentos
   const CATEGORIAS_MEDICAMENTOS = [
     'Analgésico',
@@ -100,7 +104,52 @@ export default function App() {
         triggerToast('⚠️ Conexión inestable detectada. Se activó automáticamente el Modo de Datos Bajos.');
       }, 1000);
     }
+
+    // Escuchar cambios de red en tiempo real si el navegador lo soporta
+    const conn = (navigator as any).connection;
+    if (conn) {
+      const handleConnectionChange = () => {
+        const manualPref = sessionStorage.getItem('cuidarte_data_saver');
+        if (manualPref === null) {
+          const autoSaver = isDataSaverEnabled();
+          setDataSaver(autoSaver);
+          setDataSaverEnabled(autoSaver);
+          clearApiCache();
+          triggerToast(autoSaver 
+            ? '⚡ Red inestable detectada. Activamos el ahorro de datos.' 
+            : '✨ Tu señal mejoró. Volvimos a la conexión normal.'
+          );
+        }
+      };
+
+      try {
+        conn.addEventListener('change', handleConnectionChange);
+      } catch (e) {
+        conn.onchange = handleConnectionChange;
+      }
+
+      return () => {
+        try {
+          conn.removeEventListener('change', handleConnectionChange);
+        } catch (e) {
+          conn.onchange = null;
+        }
+      };
+    }
   }, []);
+
+  // Efecto para enfocar automáticamente el buscador según la pestaña activa
+  useEffect(() => {
+    if (activeTab === 'pacientes') {
+      setTimeout(() => {
+        inputPacientesRef.current?.focus();
+      }, 50);
+    } else if (activeTab === 'medicamentos') {
+      setTimeout(() => {
+        inputMedicamentosRef.current?.focus();
+      }, 50);
+    }
+  }, [activeTab]);
 
   // 2. Debounce dinámico de búsqueda de Pacientes (800ms en Datos Bajos para evitar ráfagas de red)
   useEffect(() => {
@@ -205,64 +254,6 @@ export default function App() {
         
         {/* Barra de Avisos de Emergencia y Directorio */}
         <EmergencyAlerts onTriggerToast={triggerToast} />
-        
-        {/* Banner de Estado de Red / Modo Ahorro de Datos (Venezuela) */}
-        <div 
-          id="data-saver-status-bar" 
-          className={`rounded-2xl p-3.5 border transition-all duration-300 flex flex-col min-[520px]:flex-row items-start min-[520px]:items-center justify-between gap-3.5 shadow-sm ${
-            dataSaver 
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-950' 
-              : 'bg-white border-slate-200/80 text-slate-800'
-          }`}
-        >
-          <div className="flex items-start gap-3">
-            <div className={`p-2 rounded-xl mt-0.5 shrink-0 ${
-              dataSaver ? 'bg-emerald-100 text-emerald-700 animate-pulse' : 'bg-amber-50 text-amber-600 border border-amber-100'
-            }`}>
-              <AlertCircle className="w-5 h-5" />
-            </div>
-            <div className="space-y-0.5">
-              <p className="text-xs sm:text-sm font-bold flex flex-wrap items-center gap-1.5 leading-none">
-                {dataSaver ? 'Optimizador de Ancho de Banda Activo' : 'Red de Emergencia • Señal Inestable'}
-                {dataSaver ? (
-                  <span className="px-2 py-0.5 rounded-lg text-[9px] bg-emerald-600 text-white font-extrabold uppercase tracking-wider">
-                    Modo Datos Bajos
-                  </span>
-                ) : (
-                  <span className="px-2 py-0.5 rounded-lg text-[9px] bg-amber-500 text-white font-extrabold uppercase tracking-wider">
-                    Ancho de Banda Estándar
-                  </span>
-                )}
-              </p>
-              <p className="text-[11px] text-slate-500 leading-relaxed max-w-xl">
-                {dataSaver 
-                  ? 'La aplicación ha desactivado recursos gráficos innecesarios, ralentizado peticiones en curso y cacheado búsquedas en memoria de 0 bytes para mayor resiliencia en zonas sin señal.'
-                  : 'Si se encuentra en una zona con mala cobertura, active el Modo de Datos Bajos para conservar saldo y optimizar la velocidad.'}
-              </p>
-            </div>
-          </div>
-          <button
-            id="btn-toggle-datasaver"
-            onClick={() => {
-              const newValue = !dataSaver;
-              setDataSaver(newValue);
-              setDataSaverEnabled(newValue);
-              clearApiCache(); // Vaciar caché para forzar nueva recarga limpia
-              triggerToast(newValue 
-                ? 'Modo Datos Bajos habilitado. Conexiones cacheadas y optimizadas.' 
-                : 'Modo de Datos Bajos desactivado. Carga de red regular restablecida.'
-              );
-            }}
-            className={`w-full min-[520px]:w-auto px-4 py-2.5 rounded-xl text-xs font-bold transition-all border shrink-0 cursor-pointer text-center ${
-              dataSaver 
-                ? 'bg-emerald-600 border-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-100' 
-                : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700 hover:text-slate-900'
-            }`}
-            style={{ minHeight: '44px' }}
-          >
-            {dataSaver ? 'Desactivar Ahorro' : 'Activar Modo Datos Bajos'}
-          </button>
-        </div>
 
         {/* ==================================
             PESTAÑA 1: BÚSQUEDA DE PACIENTES 
@@ -277,12 +268,13 @@ export default function App() {
               <div className="relative">
                 <Search className="absolute left-4.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
+                  ref={inputPacientesRef}
                   id="input-pacientes-query"
                   type="text"
                   placeholder={
                     searchType === 'nombre' 
-                      ? "Escriba el nombre completo o apellido del paciente..." 
-                      : "Escriba los últimos dígitos o cédula completa..."
+                      ? "Escribe el nombre completo o apellido de tu familiar..." 
+                      : "Escribe los últimos números o la cédula completa..."
                   }
                   value={pacientesQuery}
                   onChange={(e) => setPacientesQuery(e.target.value)}
@@ -312,7 +304,7 @@ export default function App() {
                       id="search-type-nombre"
                       onClick={() => {
                         setSearchType('nombre');
-                        triggerToast('Búsqueda configurada por Nombre y Apellido.');
+                        triggerToast('Buscando por Nombre y Apellido.');
                       }}
                       className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                         searchType === 'nombre' 
@@ -321,13 +313,13 @@ export default function App() {
                       }`}
                       style={{ minHeight: '36px' }}
                     >
-                      Nombre / Apellido
+                      Nombre y Apellido
                     </button>
                     <button
                       id="search-type-cedula"
                       onClick={() => {
                         setSearchType('cedula');
-                        triggerToast('Búsqueda configurada por Cédula de Identidad.');
+                        triggerToast('Buscando por Cédula de Identidad.');
                       }}
                       className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                         searchType === 'cedula' 
@@ -336,7 +328,7 @@ export default function App() {
                       }`}
                       style={{ minHeight: '36px' }}
                     >
-                      Cédula Identidad
+                      Cédula de Identidad
                     </button>
                   </div>
                 </div>
@@ -344,14 +336,14 @@ export default function App() {
                 {/* Dropdown de Filtro de Hospital con ComboBox de Autocompletado */}
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[10px] font-extrabold uppercase text-slate-400 font-mono tracking-wider">
-                    Filtrar por Centro Médico:
+                    Filtrar por Hospital:
                   </span>
                   <HospitalComboBox
                     id="select-hospital-filter"
                     hospitales={hospitales}
                     selectedId={selectedHospitalId}
                     onChange={(id) => setSelectedHospitalId(id)}
-                    placeholder="Escriba o seleccione un hospital..."
+                    placeholder="Escribe o selecciona un hospital..."
                   />
                 </div>
 
@@ -377,15 +369,15 @@ export default function App() {
                     <Search className="w-8 h-8" />
                   </div>
                   <div className="space-y-1.5">
-                    <h3 className="text-base font-bold text-slate-900 font-display">Busque a sus seres queridos</h3>
+                    <h3 className="text-base font-bold text-slate-900 font-display">Busca a tu ser querido</h3>
                     <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
-                      Ingrese un nombre, apellido o los números de cédula para iniciar la búsqueda en tiempo real de pacientes ingresados en los hospitales principales de Venezuela.
+                      Escribe su nombre, apellido o número de cédula para ver en qué hospital de Venezuela se encuentra ingresado.
                     </p>
                   </div>
                   <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-xl text-left flex gap-3">
                     <FileText className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
                     <p className="text-[11px] text-slate-500 leading-normal">
-                      <strong>Nota de Seguridad:</strong> Con el fin de resguardar el derecho constitucional a la intimidad, no se publicará el listado masivo en crudo. Utilice la caja de búsqueda para consultar fichas específicas.
+                      <strong>Nota de Privacidad:</strong> Por seguridad de los pacientes y para respetar su privacidad, no publicamos la lista completa. Solo busca directamente por el nombre o cédula.
                     </p>
                   </div>
                 </div>
@@ -395,9 +387,9 @@ export default function App() {
                   <div className="w-14 h-14 bg-rose-50 border border-rose-100 rounded-full flex items-center justify-center text-rose-500 mx-auto">
                     <HelpCircle className="w-7 h-7" />
                   </div>
-                  <h3 className="text-base font-bold text-slate-900 font-display">No se encontraron coincidencias</h3>
+                  <h3 className="text-base font-bold text-slate-900 font-display">No encontramos coincidencias</h3>
                   <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
-                    Asegúrese de escribir correctamente el apellido o intente ingresando únicamente números de la Cédula de Identidad. Si el paciente fue trasladado recientemente, la ficha de ingreso podría tardar unas horas en actualizarse.
+                    Revisa bien si escribiste bien el apellido o intenta colocando solo los números de su cédula. Si acaban de trasladar al paciente, el sistema puede tardar un par de horas en actualizarse.
                   </p>
                 </div>
               ) : (
@@ -430,9 +422,10 @@ export default function App() {
               <div className="relative">
                 <Search className="absolute left-4.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
+                  ref={inputMedicamentosRef}
                   id="input-medicamentos-query"
                   type="text"
-                  placeholder="Escriba el nombre del medicamento a buscar (ej. Ibuprofeno, Insulina)..."
+                  placeholder="Escribe el medicamento que buscas (ej. Ibuprofeno, Insulina)..."
                   value={medicamentosQuery}
                   onChange={(e) => setMedicamentosQuery(e.target.value)}
                   className="w-full pl-12 pr-4 py-4 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm font-semibold text-slate-800 placeholder-slate-400 transition-all bg-slate-50/50"
@@ -451,28 +444,28 @@ export default function App() {
               {/* Selector de Hospital de Custodia con ComboBox de Autocompletado */}
               <div className="flex flex-col gap-1.5">
                 <span className="text-[10px] font-extrabold uppercase text-slate-400 font-mono tracking-wider">
-                  Ubicación por Hospital:
+                  ¿En cuál hospital buscas?:
                 </span>
                 <HospitalComboBox
                   id="select-med-hospital-filter"
                   hospitales={hospitales}
                   selectedId={medSelectedHospitalId}
                   onChange={(id) => setMedSelectedHospitalId(id)}
-                  placeholder="Escriba o seleccione un hospital..."
+                  placeholder="Escribe o selecciona un hospital..."
                 />
               </div>
 
               {/* Interruptor "Solo Disponibles" */}
               <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-slate-800">Filtrar medicamentos disponibles</span>
-                  <span className="text-[10px] text-slate-400 font-medium font-sans">Ocultar insumos y fármacos que se encuentren agotados temporalmente</span>
+                  <span className="text-xs font-bold text-slate-800">Mostrar solo los que hay</span>
+                  <span className="text-[10px] text-slate-400 font-semibold font-sans">Ocultar los fármacos que estén agotados temporalmente</span>
                 </div>
                 <button
                   id="toggle-solo-disponibles"
                   onClick={() => {
                     setSoloDisponibles(!soloDisponibles);
-                    triggerToast(soloDisponibles ? 'Mostrando todos los medicamentos.' : 'Filtrando solo medicamentos disponibles.');
+                    triggerToast(soloDisponibles ? 'Mostrando todos los medicamentos.' : 'Mostrando solo los disponibles.');
                   }}
                   className={`w-12 h-7 rounded-full transition-colors relative focus:outline-none cursor-pointer ${
                     soloDisponibles ? 'bg-sky-600' : 'bg-slate-200'
@@ -537,9 +530,9 @@ export default function App() {
                   <div className="w-14 h-14 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center text-slate-400 mx-auto">
                     <Pill className="w-7 h-7" />
                   </div>
-                  <h3 className="text-base font-bold text-slate-900 font-display">Sin medicamentos</h3>
+                  <h3 className="text-base font-bold text-slate-900 font-display">No hay de ese medicamento</h3>
                   <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
-                    No se encontraron donaciones o inventarios de medicamentos con los filtros seleccionados en este momento. Intente ampliando el término de búsqueda.
+                    No encontramos donaciones o inventario activo con esos filtros en este momento. Intenta escribiendo con otras palabras o quitando el filtro de hospital.
                   </p>
                 </div>
               ) : (
@@ -559,6 +552,117 @@ export default function App() {
         )}
 
       </main>
+
+      {/* Barra de Ahorro de Datos / Estado de Red al pie de página (Venezuela) */}
+      <footer className="w-full max-w-4xl mx-auto px-4 pb-12 mt-2 space-y-6">
+        <div 
+          id="data-saver-status-bar" 
+          className={`rounded-2xl p-4 border transition-all duration-300 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm ${
+            dataSaver 
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-950' 
+              : 'bg-white border-slate-200/80 text-slate-800'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-xl shrink-0 ${
+              dataSaver ? 'bg-emerald-100 text-emerald-700 animate-pulse' : 'bg-slate-100 text-slate-500'
+            }`}>
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <div className="text-left">
+              <p className="text-xs sm:text-sm font-bold flex flex-wrap items-center gap-1.5 leading-none">
+                {dataSaver ? 'Ahorro de datos activo (Pocos megas)' : 'Visualización normal'}
+                <span className="text-slate-300">•</span>
+                <span className="text-[10px] text-slate-400 font-extrabold uppercase font-mono tracking-wider">
+                  Autodetección de red activa
+                </span>
+              </p>
+              <p className="text-xs text-slate-500 mt-1 leading-normal max-w-lg">
+                {dataSaver 
+                  ? 'Ocultamos fotos e información no urgente para que el buscador vuele aunque tengas una sola rayita de señal.' 
+                  : 'Si estás corto de saldo o la señal en el hospital está muy lenta, puedes activar el ahorro para que cargue más rápido.'}
+              </p>
+            </div>
+          </div>
+          <button
+            id="btn-toggle-datasaver"
+            onClick={() => {
+              const newValue = !dataSaver;
+              setDataSaver(newValue);
+              setDataSaverEnabled(newValue);
+              clearApiCache(); // Vaciar caché para forzar nueva recarga limpia
+              triggerToast(newValue 
+                ? '¡Listo pana! Activamos el ahorro de datos.' 
+                : 'Modo ahorro desactivado. Cargando datos completos.'
+              );
+            }}
+            className={`w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-bold transition-all border shrink-0 cursor-pointer text-center ${
+              dataSaver 
+                ? 'bg-emerald-600 border-emerald-600 hover:bg-emerald-700 text-white shadow-xs' 
+                : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+            }`}
+            style={{ minHeight: '40px' }}
+          >
+            {dataSaver ? 'Desactivar Ahorro' : 'Forzar Ahorro'}
+          </button>
+        </div>
+
+        {/* Enlaces de Ayuda Externa y Contacto */}
+        <div className="bg-white border border-slate-100 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+          <div>
+            <h4 className="text-xs font-bold text-slate-400 font-mono uppercase tracking-wider">
+              Otras páginas de ayuda:
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+              <a 
+                href="https://desaparecidosterremotovenezuela.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-sky-200 hover:bg-sky-50/20 text-slate-700 hover:text-sky-700 transition-all font-semibold text-xs"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
+                <span>desaparecidosterremotovenezuela.com</span>
+              </a>
+              <a 
+                href="https://venezuelatebusca.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-sky-200 hover:bg-sky-50/20 text-slate-700 hover:text-sky-700 transition-all font-semibold text-xs"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
+                <span>venezuelatebusca.com</span>
+              </a>
+              <a 
+                href="https://redayudavenezuela.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-sky-200 hover:bg-sky-50/20 text-slate-700 hover:text-sky-700 transition-all font-semibold text-xs"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
+                <span>redayudavenezuela.com</span>
+              </a>
+              <a 
+                href="https://enlazavenezuela.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-sky-200 hover:bg-sky-50/20 text-slate-700 hover:text-sky-700 transition-all font-semibold text-xs"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
+                <span>enlazavenezuela.com</span>
+              </a>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-semibold text-slate-500">
+            <span className="flex items-center gap-1.5">
+              📧 Contacto: <a href="mailto:info@cuidartevzla.com" className="text-sky-600 hover:underline">info@cuidartevzla.com</a>
+            </span>
+            <span className="text-[10px] text-slate-400 font-mono">
+              Cuídarte Venezuela © 2026 • Apoyo Comunitario
+            </span>
+          </div>
+        </div>
+      </footer>
 
       {/* ==================================
           MODALES DE DETALLE (PACIENTES / MEDICAMENTOS)

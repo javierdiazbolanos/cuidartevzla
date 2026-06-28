@@ -1,63 +1,32 @@
-// Cuídarte Venezuela - Service Worker
-const CACHE_NAME = 'cuidarte-ve-v1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/config.json',
-  '/manifest.json'
-];
+// Cuídarte Venezuela - Self-Destructive Service Worker
+// This instantly deletes all existing caches, clears registration, and loads live code.
 
-// Instalar y almacenar activos estáticos principales
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
-  );
+  self.skipWaiting();
 });
 
-// Activar y limpiar cachés antiguos
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
+        keys.map((key) => caches.delete(key))
       );
-    }).then(() => self.clients.claim())
-  );
-});
-
-// Estrategia de red con fallback a caché
-self.addEventListener('fetch', (event) => {
-  // Evitar interceptar solicitudes a la API PHP reales
-  if (event.request.url.includes('/api/')) {
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
-        }
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+    }).then(() => {
+      return self.clients.claim();
+    }).then(() => {
+      // Force all open tabs to reload immediately to get the latest update
+      return self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          if (client.url && 'navigate' in client) {
+            client.navigate(client.url);
+          }
         });
-        return networkResponse;
-      }).catch(() => {
-        // Fallback si falla la red y no está en caché
-        if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
-        }
       });
     })
   );
+});
+
+self.addEventListener('fetch', (event) => {
+  // Always fetch directly from network, bypassing any interception
+  event.respondWith(fetch(event.request));
 });

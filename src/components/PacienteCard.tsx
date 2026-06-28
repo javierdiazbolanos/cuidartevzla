@@ -12,10 +12,10 @@ export default function PacienteCard({ paciente, onTap }: PacienteCardProps) {
   // Configuración de colores según el estado
   const stateConfig = {
     hospitalizado: { bg: 'bg-blue-50 text-blue-700 border-blue-100', text: 'Hospitalizado', dot: 'bg-blue-500' },
-    alta: { bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', text: 'Alta Médica', dot: 'bg-emerald-500' },
-    referido: { bg: 'bg-amber-50 text-amber-700 border-amber-100', text: 'Referido', dot: 'bg-amber-500' },
+    alta: { bg: 'bg-emerald-50 text-emerald-700 border-emerald-100', text: 'Dado de Alta', dot: 'bg-emerald-500' },
+    referido: { bg: 'bg-amber-50 text-amber-700 border-amber-100', text: 'Trasladado', dot: 'bg-amber-500' },
     fallecido: { bg: 'bg-slate-100 text-slate-700 border-slate-200', text: 'Fallecido', dot: 'bg-slate-500' },
-    desconocido: { bg: 'bg-rose-50 text-rose-700 border-rose-100', text: 'En Observación / S.I.', dot: 'bg-rose-500' }
+    desconocido: { bg: 'bg-rose-50 text-rose-700 border-rose-100', text: 'En Observación', dot: 'bg-rose-500' }
   };
 
   const config = stateConfig[paciente.estado] || stateConfig.desconocido;
@@ -35,7 +35,7 @@ export default function PacienteCard({ paciente, onTap }: PacienteCardProps) {
 
         {/* Fila de Datos Secundarios: Edad y Sexo */}
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-500 font-medium font-mono">
-          <span>Edad: {paciente.edad !== null ? `${paciente.edad} años` : 'S.I.'}</span>
+          <span>Edad: {paciente.edad !== null ? `${paciente.edad} años` : 'Sin datos'}</span>
           <span className="text-slate-300">•</span>
           <span>Sexo: {paciente.sexo}</span>
           <span className="text-slate-300">•</span>
@@ -53,7 +53,7 @@ export default function PacienteCard({ paciente, onTap }: PacienteCardProps) {
         {/* Fila de Fecha */}
         <div className="flex items-center gap-1.5 text-xs text-slate-400">
           <Calendar className="w-3.5 h-3.5 shrink-0" />
-          <span>Ingreso: {paciente.ingreso_fecha ? paciente.ingreso_fecha : 'No especificado'}</span>
+          <span>Entró el: {paciente.ingreso_fecha ? paciente.ingreso_fecha : 'No especificado'}</span>
         </div>
       </div>
 
