@@ -100,7 +100,7 @@ export default function App() {
   const [dataSaver, setDataSaver] = useState<boolean>(() => isDataSaverEnabled());
 
   // Estadísticas de la BD (cantidad real y última fecha)
-  const [stats, setStats] = useState<{ pacientes_count: number; ultimo_registro: string | null; hospitales_count: number } | null>(null);
+  const [stats, setStats] = useState<{ pacientes_count: number; ultimo_registro: string | null; ultima_actualizacion: string | null; hospitales_count: number } | null>(null);
 
   // Refs para enfocar automáticamente el buscador de cada pestaña
   const inputPacientesRef = React.useRef<HTMLInputElement>(null);
@@ -515,7 +515,7 @@ export default function App() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-sky-500"></span>
                   </span>
-                  📢 {stats ? `${stats.pacientes_count.toLocaleString()} registros` : ''}{stats?.ultimo_registro ? ` • ${formatStatsDate(stats.ultimo_registro)}` : ''}
+                  📢 {stats ? `${stats.pacientes_count.toLocaleString()} registros` : ''}{stats?.ultimo_registro ? ` • ${formatStatsDate(stats.ultimo_registro)}` : ''}{stats?.ultima_actualizacion ? ` • ${stats.ultima_actualizacion}` : ''}
                 </span>
               </div>
 
@@ -680,7 +680,7 @@ export default function App() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-sky-500"></span>
                   </span>
-                  📢 {stats ? `${stats.pacientes_count.toLocaleString()} registros` : ''}{stats?.ultimo_registro ? ` • ${formatStatsDate(stats.ultimo_registro)}` : ''}
+                  📢 {stats ? `${stats.pacientes_count.toLocaleString()} registros` : ''}{stats?.ultimo_registro ? ` • ${formatStatsDate(stats.ultimo_registro)}` : ''}{stats?.ultima_actualizacion ? ` • ${stats.ultima_actualizacion}` : ''}
                 </span>
               </div>
 
