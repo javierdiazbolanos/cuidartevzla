@@ -99,6 +99,9 @@ export default function App() {
   // Modo de Datos Bajos para redes inestables (Venezuela)
   const [dataSaver, setDataSaver] = useState<boolean>(() => isDataSaverEnabled());
 
+  // Estadísticas de la BD (cantidad real y última fecha)
+  const [stats, setStats] = useState<{ pacientes_count: number; ultimo_registro: string | null; hospitales_count: number } | null>(null);
+
   // Refs para enfocar automáticamente el buscador de cada pestaña
   const inputPacientesRef = React.useRef<HTMLInputElement>(null);
   const inputMedicamentosRef = React.useRef<HTMLInputElement>(null);
@@ -122,6 +125,18 @@ export default function App() {
     setTimeout(() => {
       setToastMsg(null);
     }, 4500);
+  };
+
+  // Helper para formatear fecha en español (hora Venezuela UTC-4)
+  const formatStatsDate = (dateStr: string | null) => {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr + 'T00:00:00-04:00'); // Venezuela UTC-4
+      const meses = ['enero','febrero','marzo','abril','mayo','junio',
+                     'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+      const dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+      return `${dias[d.getDay()]} ${d.getDate()} de ${meses[d.getMonth()]}`;
+    } catch { return ''; }
   };
 
   // Manejadores para el registro y gestión de transporte voluntario
@@ -297,6 +312,21 @@ export default function App() {
         }
       };
     }
+  }, []);
+
+  // Efecto para cargar estadísticas reales de la BD
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const apiBase = await getApiBase();
+        const res = await fetch(`${apiBase}/stats.php`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.ok) setStats(json.data);
+        }
+      } catch (_) {}
+    };
+    fetchStats();
   }, []);
 
   // Efecto para enfocar automáticamente el buscador según la pestaña activa
@@ -482,7 +512,7 @@ export default function App() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-sky-500"></span>
                   </span>
-                  📢 Actualizado: 27 de junio - 3:55 PM Hora VE
+                  📢 {stats ? `${stats.pacientes_count.toLocaleString()} registros` : ''}{stats?.ultimo_registro ? ` • ${formatStatsDate(stats.ultimo_registro)}` : ''}
                 </span>
               </div>
 
@@ -647,7 +677,7 @@ export default function App() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-sky-500"></span>
                   </span>
-                  📢 Actualizado: 27 de junio - 3:55 PM Hora VE
+                  📢 {stats ? `${stats.pacientes_count.toLocaleString()} registros` : ''}{stats?.ultimo_registro ? ` • ${formatStatsDate(stats.ultimo_registro)}` : ''}
                 </span>
               </div>
 
