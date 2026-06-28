@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Users, Pill, WifiOff, RefreshCw, AlertCircle } from 'lucide-react';
+import { Shield, Users, Pill, WifiOff, RefreshCw, AlertCircle, Car } from 'lucide-react';
 import { isUsingMocks } from '../apiClient';
 
 interface HeaderProps {
-  activeTab: 'pacientes' | 'medicamentos';
-  setActiveTab: (tab: 'pacientes' | 'medicamentos') => void;
+  activeTab: 'pacientes' | 'insumos' | 'transporte';
+  setActiveTab: (tab: 'pacientes' | 'insumos' | 'transporte') => void;
   onRetry: () => void;
 }
 
@@ -93,7 +93,7 @@ export default function Header({ activeTab, setActiveTab, onRetry }: HeaderProps
         </div>
 
         {/* Sistema de Pestañas (Tabs) con Touch Targets Grandes (mínimo 44px) */}
-        <div className="mt-5 flex gap-2 border-t border-slate-100 pt-4">
+        <div className="mt-5 flex flex-wrap sm:flex-nowrap gap-2 border-t border-slate-100 pt-4">
           <button
             id="tab-pacientes"
             onClick={() => setActiveTab('pacientes')}
@@ -108,17 +108,30 @@ export default function Header({ activeTab, setActiveTab, onRetry }: HeaderProps
             <span>PACIENTES</span>
           </button>
           <button
-            id="tab-medicamentos"
-            onClick={() => setActiveTab('medicamentos')}
+            id="tab-insumos"
+            onClick={() => setActiveTab('insumos')}
             className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 py-2.5 sm:py-3 px-1.5 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
-              activeTab === 'medicamentos'
+              activeTab === 'insumos'
                 ? 'bg-sky-600 text-white shadow-lg shadow-sky-100'
                 : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-100'
             }`}
             style={{ minHeight: '48px' }}
           >
             <Pill className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-            <span>MEDICAMENTOS</span>
+            <span>INSUMOS</span>
+          </button>
+          <button
+            id="tab-transporte"
+            onClick={() => setActiveTab('transporte')}
+            className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 py-2.5 sm:py-3 px-1.5 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
+              activeTab === 'transporte'
+                ? 'bg-sky-600 text-white shadow-lg shadow-sky-100'
+                : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-100'
+            }`}
+            style={{ minHeight: '48px' }}
+          >
+            <Car className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+            <span>TRANSPORTE</span>
           </button>
         </div>
       </div>

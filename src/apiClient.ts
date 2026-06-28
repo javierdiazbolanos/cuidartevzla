@@ -3,8 +3,10 @@
  * Terremotos de Venezuela - Junio de 2026
  */
 
-import { Hospital, Paciente, PacienteDetalle, Medicamento } from './types';
-import { MOCK_HOSPITALES, MOCK_PACIENTES, MOCK_MEDICAMENTOS } from './mockData';
+import { Hospital, Paciente, PacienteDetalle, Insumo, Medicamento, Transporte } from './types';
+import { MOCK_HOSPITALES, MOCK_PACIENTES, MOCK_INSUMOS, MOCK_TRANSPORTE } from './mockData';
+
+const MOCK_MEDICAMENTOS = MOCK_INSUMOS;
 
 let apiBasePromise: Promise<string> | null = null;
 let isMockMode = false;
@@ -15,6 +17,7 @@ const cachePacientes = new Map<string, Paciente[]>();
 const cachePacienteDetalle = new Map<number, PacienteDetalle>();
 const cacheMedicamentos = new Map<string, Medicamento[]>();
 const cacheMedicamentoDetalle = new Map<number, Medicamento>();
+const cacheTransporte = new Map<string, Transporte[]>();
 
 /**
  * Indica si la compresión / ahorro de datos está activo
@@ -53,6 +56,7 @@ export function clearApiCache(): void {
   cachePacienteDetalle.clear();
   cacheMedicamentos.clear();
   cacheMedicamentoDetalle.clear();
+  cacheTransporte.clear();
   if (typeof window !== 'undefined') {
     try {
       localStorage.removeItem('cuidarte_hospitales_v2');
@@ -441,4 +445,353 @@ function mockSearchMedicamentos(
     }
     return tsNormNombre(a.nombre).localeCompare(tsNormNombre(b.nombre));
   });
+}
+
+function getLocalTransporteList(): Transporte[] {
+  if (typeof window === 'undefined') return MOCK_TRANSPORTE;
+  try {
+    const stored = localStorage.getItem('cuidarte_transporte_v1');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    localStorage.setItem('cuidarte_transporte_v1', JSON.stringify(MOCK_TRANSPORTE));
+    return MOCK_TRANSPORTE;
+  } catch (e) {
+    return MOCK_TRANSPORTE;
+  }
+}
+
+function saveLocalTransporteList(list: Transporte[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('cuidarte_transporte_v1', JSON.stringify(list));
+    cacheTransporte.clear();
+  } catch (e) {}
+}
+
+/**
+ * Busca ofertas de transporte voluntario
+ */
+export async function getTransporte(
+  q: string, 
+  ciudad?: string, 
+  soloDisponibles?: boolean
+): Promise<Transporte[]> {
+  const cacheKey = `${q.trim()}_${ciudad || 'null'}_${soloDisponibles ? '1' : '0'}`;
+
+  if (isDataSaverEnabled() && cacheTransporte.has(cacheKey)) {
+    console.log(`[Cuídarte Cache] Transporte devuelto de caché local: "${cacheKey}"`);
+    return cacheTransporte.get(cacheKey)!;
+  }
+
+  let result: Transporte[];
+  if (isMockMode) {
+    result = mockSearchTransporte(q, ciudad, soloDisponibles);
+  } else {
+    try {
+      const apiBase = await getApiBase();
+      const url = new URL(`${window.location.origin}${apiBase}/transporte.php`);
+      url.searchParams.set('q', q);
+      if (ciudad) url.searchParams.set('ciudad', ciudad);
+      if (soloDisponibles) url.searchParams.set('solo_disponibles', '1');
+
+      const res = await fetch(url.toString());
+      if (!res.ok) throw new Error('Error de red');
+      
+      const json = await res.json();
+      if (json.ok && Array.isArray(json.data)) {
+        result = json.data;
+      } else {
+        throw new Error(json.error || 'Formato incorrecto');
+      }
+    } catch (err) {
+      console.warn('[Cuídarte] Falló consulta a transporte en el servidor PHP. Usando base de datos simulada de emergencia.');
+      isMockMode = true;
+      result = mockSearchTransporte(q, ciudad, soloDisponibles);
+    }
+  }
+
+  cacheTransporte.set(cacheKey, result);
+  return result;
+}
+
+function mockSearchTransporte(
+  q: string, 
+  ciudad?: string, 
+  soloDisponibles?: boolean
+): Transporte[] {
+  const queryTrimmed = q.trim();
+  const list = getLocalTransporteList();
+
+  return list.filter(t => {
+    // Filtro por ciudad
+    if (ciudad && t.ciudad.toLowerCase() !== ciudad.toLowerCase()) {
+      return false;
+    }
+
+    // Filtro disponibilidad
+    if (soloDisponibles && !t.disponible) {
+      return false;
+    }
+
+    // Filtro por texto query (mínimo 2 letras)
+    if (queryTrimmed.length >= 2) {
+      const qNorm = tsNormNombre(queryTrimmed);
+      const nameNorm = tsNormNombre(t.nombre);
+      const vehicleNorm = tsNormNombre(t.vehiculo);
+      const notesNorm = t.notas ? tsNormNombre(t.notas) : '';
+      return nameNorm.includes(qNorm) || vehicleNorm.includes(qNorm) || notesNorm.includes(qNorm);
+    }
+
+    return true;
+  }).sort((a, b) => {
+    // Ordenar por disponible desc, luego por nombre asc
+    if (a.disponible !== b.disponible) {
+      return a.disponible ? -1 : 1;
+    }
+    return tsNormNombre(a.nombre).localeCompare(tsNormNombre(b.nombre));
+  });
+}
+
+/**
+ * Registra un nuevo vehículo/conductor voluntario.
+ * Soporta tanto el servidor real como el local storage de emergencia.
+ */
+export async function registrarTransporte(data: {
+  nombre: string;
+  telefono: string;
+  ciudad: string;
+  vehiculo: string;
+  capacidad_personas: number;
+  capacidad_carga: string;
+  notas: string;
+  cedula: string;
+}): Promise<Transporte> {
+  const cedulaClean = tsCleanCedula(data.cedula);
+  
+  if (isMockMode) {
+    return mockRegistrarTransporte(data);
+  }
+  
+  try {
+    const apiBase = await getApiBase();
+    const res = await fetch(`${apiBase}/transporte.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson.error || 'Error al comunicarse con el servidor.');
+    }
+    
+    const json = await res.json();
+    if (json.ok) {
+      // Sincronizar en local storage para resiliencia offline
+      const localList = getLocalTransporteList();
+      const newRecord: Transporte = {
+        id: json.data.id,
+        nombre: data.nombre,
+        telefono: data.telefono,
+        ciudad: data.ciudad,
+        vehiculo: data.vehiculo,
+        capacidad_personas: data.capacidad_personas,
+        capacidad_carga: data.capacidad_carga,
+        notas: data.notas,
+        disponible: true,
+        cedula: cedulaClean
+      };
+      localList.push(newRecord);
+      saveLocalTransporteList(localList);
+      
+      return newRecord;
+    }
+    throw new Error(json.error || 'Formato de respuesta incorrecto.');
+  } catch (err) {
+    console.warn('[Cuídarte] Falló registro en el servidor PHP, usando almacenamiento local.', err);
+    return mockRegistrarTransporte(data);
+  }
+}
+
+function mockRegistrarTransporte(data: {
+  nombre: string;
+  telefono: string;
+  ciudad: string;
+  vehiculo: string;
+  capacidad_personas: number;
+  capacidad_carga: string;
+  notas: string;
+  cedula: string;
+}): Transporte {
+  const localList = getLocalTransporteList();
+  const cedulaClean = tsCleanCedula(data.cedula);
+  
+  // Verificar si la cédula ya existe
+  const exists = localList.some(t => t.cedula && tsCleanCedula(t.cedula) === cedulaClean);
+  if (exists) {
+    throw new Error('Ya existe un vehículo registrado con esta cédula de identidad en este dispositivo. Usa la opción de actualización.');
+  }
+  
+  const newId = Date.now();
+  const newRecord: Transporte = {
+    id: newId,
+    nombre: data.nombre,
+    telefono: data.telefono,
+    ciudad: data.ciudad,
+    vehiculo: data.vehiculo,
+    capacidad_personas: data.capacidad_personas,
+    capacidad_carga: data.capacidad_carga,
+    notas: data.notas,
+    disponible: true,
+    cedula: cedulaClean
+  };
+  
+  localList.push(newRecord);
+  saveLocalTransporteList(localList);
+  return newRecord;
+}
+
+/**
+ * Actualiza un registro voluntario de transporte (autenticando con cédula).
+ */
+export async function actualizarTransporte(
+  id: number,
+  cedula: string,
+  campos: {
+    nombre?: string;
+    telefono?: string;
+    ciudad?: string;
+    vehiculo?: string;
+    capacidad_personas?: number;
+    capacidad_carga?: string;
+    notas?: string;
+    disponible?: boolean;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  const cedulaClean = tsCleanCedula(cedula);
+  
+  if (isMockMode) {
+    return mockActualizarTransporte(id, cedulaClean, campos);
+  }
+  
+  try {
+    const apiBase = await getApiBase();
+    const res = await fetch(`${apiBase}/transporte.php`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id, cedula: cedulaClean, ...campos })
+    });
+    
+    const json = await res.json().catch(() => ({}));
+    if (res.ok && json.ok) {
+      // Sincronizar en local storage
+      const localList = getLocalTransporteList();
+      const index = localList.findIndex(t => t.id === id);
+      if (index !== -1) {
+        localList[index] = {
+          ...localList[index],
+          ...campos,
+          cedula: localList[index].cedula || cedulaClean
+        };
+        saveLocalTransporteList(localList);
+      }
+      return { success: true };
+    }
+    return { success: false, error: json.error || 'Error al actualizar.' };
+  } catch (err) {
+    console.warn('[Cuídarte] Falló actualización en el servidor, usando almacenamiento local.', err);
+    return mockActualizarTransporte(id, cedulaClean, campos);
+  }
+}
+
+function mockActualizarTransporte(
+  id: number,
+  cedulaClean: string,
+  campos: any
+): { success: boolean; error?: string } {
+  const localList = getLocalTransporteList();
+  const index = localList.findIndex(t => t.id === id);
+  if (index === -1) {
+    return { success: false, error: 'Registro voluntario no encontrado.' };
+  }
+  
+  const record = localList[index];
+  const recordCedulaClean = record.cedula ? tsCleanCedula(record.cedula) : '';
+  
+  if (recordCedulaClean && recordCedulaClean !== cedulaClean) {
+    return { success: false, error: 'La cédula de identidad ingresada no coincide con el registro original.' };
+  }
+  
+  localList[index] = {
+    ...record,
+    ...campos,
+    cedula: recordCedulaClean || cedulaClean
+  };
+  
+  saveLocalTransporteList(localList);
+  return { success: true };
+}
+
+/**
+ * Elimina permanentemente un registro de transporte voluntario.
+ */
+export async function eliminarTransporte(
+  id: number,
+  cedula: string
+): Promise<{ success: boolean; error?: string }> {
+  const cedulaClean = tsCleanCedula(cedula);
+  
+  if (isMockMode) {
+    return mockEliminarTransporte(id, cedulaClean);
+  }
+  
+  try {
+    const apiBase = await getApiBase();
+    const res = await fetch(`${apiBase}/transporte.php`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id, cedula: cedulaClean })
+    });
+    
+    const json = await res.json().catch(() => ({}));
+    if (res.ok && json.ok) {
+      const localList = getLocalTransporteList();
+      const newList = localList.filter(t => t.id !== id);
+      saveLocalTransporteList(newList);
+      return { success: true };
+    }
+    return { success: false, error: json.error || 'Error al eliminar.' };
+  } catch (err) {
+    console.warn('[Cuídarte] Falló eliminación en el servidor, usando almacenamiento local.', err);
+    return mockEliminarTransporte(id, cedulaClean);
+  }
+}
+
+function mockEliminarTransporte(
+  id: number,
+  cedulaClean: string
+): { success: boolean; error?: string } {
+  const localList = getLocalTransporteList();
+  const index = localList.findIndex(t => t.id === id);
+  if (index === -1) {
+    return { success: false, error: 'Registro voluntario no encontrado.' };
+  }
+  
+  const record = localList[index];
+  const recordCedulaClean = record.cedula ? tsCleanCedula(record.cedula) : '';
+  
+  if (recordCedulaClean && recordCedulaClean !== cedulaClean) {
+    return { success: false, error: 'La cédula de identidad ingresada no coincide. No puedes eliminar este registro.' };
+  }
+  
+  const newList = localList.filter(t => t.id !== id);
+  saveLocalTransporteList(newList);
+  return { success: true };
 }

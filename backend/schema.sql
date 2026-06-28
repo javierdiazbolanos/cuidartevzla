@@ -7,6 +7,7 @@ CREATE TABLE hospitales (
   municipio VARCHAR(120) NULL,
   lat DECIMAL(9,6) NULL,
   lng DECIMAL(9,6) NULL,
+  telefono VARCHAR(40) NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uq_nombre (nombre)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -58,6 +59,25 @@ CREATE TABLE medicamentos (
   KEY idx_disponible (disponible),
   FULLTEXT KEY ft_nombre (nombre),
   CONSTRAINT fk_med_hosp FOREIGN KEY (hospital_id) REFERENCES hospitales(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE transporte (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nombre VARCHAR(150) NOT NULL,
+  nombre_norm VARCHAR(150) NOT NULL,
+  telefono VARCHAR(30) NOT NULL,
+  ciudad VARCHAR(100) NOT NULL,
+  vehiculo VARCHAR(200) NOT NULL,
+  capacidad_personas INT UNSIGNED NOT NULL DEFAULT 0,
+  capacidad_carga VARCHAR(150) NOT NULL DEFAULT '0 kg',
+  disponible TINYINT(1) NOT NULL DEFAULT 1,
+  notas TEXT NULL,
+  creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_ciudad (ciudad),
+  KEY idx_disponible (disponible),
+  KEY idx_nombre_norm (nombre_norm)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Semilla de Hospitales Principales de Venezuela

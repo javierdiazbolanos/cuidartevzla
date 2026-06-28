@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   PhoneCall, 
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 export interface EmergencyNotice {
@@ -44,6 +46,39 @@ export default function EmergencyAlerts({ onTriggerToast }: EmergencyAlertsProps
   const [showDirectory, setShowDirectory] = useState(false);
   const [currentNoticeIndex, setCurrentNoticeIndex] = useState(0);
 
+  // Soporte para gestos de deslizamiento (Swipe) con el dedo en móviles (sin librerías pesadas)
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+
+  const handleNext = () => {
+    if (notices.length <= 1) return;
+    setCurrentNoticeIndex(prev => (prev + 1) % notices.length);
+  };
+
+  const handlePrev = () => {
+    if (notices.length <= 1) return;
+    setCurrentNoticeIndex(prev => (prev - 1 + notices.length) % notices.length);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diffX = touchStartX - touchEndX;
+
+    // Umbral de 50px para detectar deslizamiento
+    if (diffX > 50) {
+      handleNext();
+      onTriggerToast('Mostrando siguiente aviso');
+    } else if (diffX < -50) {
+      handlePrev();
+      onTriggerToast('Mostrando aviso anterior');
+    }
+    setTouchStartX(null);
+  };
+
   // 1. Cargar datos iniciales desde localStorage o Defaults para resiliencia offline completa
   useEffect(() => {
     let savedNotices = DEFAULT_NOTICES;
@@ -65,34 +100,37 @@ export default function EmergencyAlerts({ onTriggerToast }: EmergencyAlertsProps
     setContacts(savedContacts);
   }, []);
 
-  // 2. Rotación automática del Ticker cada 6 segundos para no abrumar al usuario
+  // 2. Rotación automática del Ticker cada 6 segundos, se reinicia cada vez que cambia el índice o hay interacción manual
   useEffect(() => {
     if (notices.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentNoticeIndex(prev => (prev + 1) % notices.length);
     }, 6000);
     return () => clearInterval(interval);
-  }, [notices]);
+  }, [notices, currentNoticeIndex]);
 
   const activeNotice = notices[currentNoticeIndex];
 
   return (
     <div id="emergency-alerts-root" className="w-full space-y-3">
       
-      {/* 1. TICKER AUTOMÁTICO DE NOTICIAS DE EMERGENCIA */}
+      {/* 1. TICKER AUTOMÁTICO DE NOTICIAS DE EMERGENCIA CON SWIPE INTEGRADO */}
       {notices.length > 0 && activeNotice && (
         <div 
           id="emergency-ticker-banner"
-          className={`relative overflow-hidden rounded-2xl border px-4 py-3 shadow-sm transition-all duration-300 flex items-center justify-between gap-3 ${
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className={`relative overflow-hidden rounded-2xl border px-3 sm:px-4 py-3 shadow-sm transition-all duration-300 flex items-center justify-between gap-2.5 sm:gap-3 ${
             activeNotice.type === 'alert' 
               ? 'bg-rose-50/90 border-rose-200 text-rose-950' 
               : activeNotice.type === 'success'
                 ? 'bg-sky-50/90 border-sky-200 text-sky-950'
                 : 'bg-amber-50/90 border-amber-200 text-amber-950'
           }`}
+          title="Desliza horizontalmente para ver más avisos"
         >
           {/* Luz intermitente de alerta */}
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
             <span className="relative flex h-3 w-3 shrink-0">
               <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
                 activeNotice.type === 'alert' 
@@ -116,28 +154,60 @@ export default function EmergencyAlerts({ onTriggerToast }: EmergencyAlertsProps
             </div>
           </div>
 
-          {/* Botones de acción del Ticker */}
-          <div className="flex items-center gap-1.5 shrink-0 ml-1">
+          {/* Botones de acción del Ticker y flechas de navegación táctiles */}
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-1">
             {notices.length > 1 && (
-              <span className="text-[10px] font-mono font-bold bg-white/70 px-2 py-0.5 rounded-lg border border-slate-200/50 hidden min-[360px]:inline-block">
-                {currentNoticeIndex + 1}/{notices.length}
-              </span>
+              <div className="flex items-center bg-white/75 border border-slate-200/50 rounded-xl p-0.5 shadow-xs">
+                {/* Flecha Izquierda */}
+                <button
+                  id="btn-prev-notice"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePrev();
+                  }}
+                  className="p-1 rounded-lg hover:bg-slate-100 text-slate-700 active:scale-90 transition-all cursor-pointer flex items-center justify-center"
+                  style={{ minWidth: '36px', minHeight: '36px' }}
+                  title="Mensaje anterior"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {/* Contador */}
+                <span className="text-[10px] font-mono font-bold px-1 min-w-[28px] text-center text-slate-800 select-none">
+                  {currentNoticeIndex + 1}/{notices.length}
+                </span>
+
+                {/* Flecha Derecha */}
+                <button
+                  id="btn-next-notice"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNext();
+                  }}
+                  className="p-1 rounded-lg hover:bg-slate-100 text-slate-700 active:scale-90 transition-all cursor-pointer flex items-center justify-center"
+                  style={{ minWidth: '36px', minHeight: '36px' }}
+                  title="Siguiente mensaje"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             )}
             
             {/* Botón para abrir directorio rápido */}
             <button
               id="btn-toggle-quick-directory"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setShowDirectory(!showDirectory);
               }}
-              className={`p-1.5 rounded-lg hover:bg-white/60 cursor-pointer transition-colors text-xs font-bold flex items-center gap-1 border border-transparent ${
+              className={`p-2 rounded-xl hover:bg-white/60 cursor-pointer transition-colors text-xs font-bold flex items-center justify-center gap-1 border border-transparent ${
                 showDirectory ? 'bg-white/80 border-slate-200 text-sky-800' : 'text-slate-600'
               }`}
-              style={{ minHeight: '32px' }}
+              style={{ minHeight: '38px', minWidth: '38px' }}
               title="Directorio de emergencia"
             >
               <PhoneCall className="w-4 h-4 shrink-0" />
-              <span className="hidden sm:inline">Teléfonos</span>
+              <span className="hidden md:inline">Teléfonos</span>
             </button>
           </div>
         </div>

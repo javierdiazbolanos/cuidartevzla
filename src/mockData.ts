@@ -1,40 +1,59 @@
-import { Hospital, Paciente, PacienteDetalle, Medicamento } from './types';
+import { Hospital, Paciente, PacienteDetalle, Insumo, Transporte } from './types';
 
 export const MOCK_HOSPITALES: Hospital[] = [
-  { id: 1, nombre: 'Hospital Universitario de Caracas (HUC)', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4897, lng: -66.8894 },
-  { id: 2, nombre: 'Hospital Dr. José María Vargas', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5173, lng: -66.9189 },
-  { id: 3, nombre: 'Hospital Miguel Pérez Carreño', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4820, lng: -66.9610 },
-  { id: 4, nombre: 'Hospital Dr. Domingo Luciani', municipio: 'Sucre', estado: 'Miranda', lat: 10.4862, lng: -66.8153 },
-  { id: 5, nombre: 'Hospital Central de Maracay', municipio: 'Girardot', estado: 'Aragua', lat: 10.2522, lng: -67.5819 },
-  { id: 6, nombre: 'Hospital Universitario Dr. Ángel Larralde', municipio: 'Valencia', estado: 'Carabobo', lat: 10.2241, lng: -68.0163 },
-  { id: 7, merge_original: true, nombre: 'Hospital Universitario de Maracaibo', municipio: 'Maracaibo', estado: 'Zulia', lat: 10.6728, lng: -71.6353 } as any, // Mantener id: 7
-  { id: 8, nombre: 'Hospital Universitario Ruiz y Páez', municipio: 'Heres', estado: 'Bolívar', lat: 8.1283, lng: -63.5414 },
-  { id: 9, nombre: 'Hospital Dr. Manuel Núñez Tovar', municipio: 'Maturín', estado: 'Monagas', lat: 9.7497, lng: -63.1794 },
-  { id: 10, nombre: 'Hospital Central de San Cristóbal', municipio: 'San Cristóbal', estado: 'Táchira', lat: 7.7656, lng: -72.2198 },
+  { id: 1, nombre: 'Hospital Universitario de Caracas (HUC)', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4897, lng: -66.8894, telefono: '(0212) 605-4050' },
+  { id: 2, nombre: 'Hospital Dr. José María Vargas', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5173, lng: -66.9189, telefono: '(0212) 862-9965' },
+  { id: 3, nombre: 'Hospital Miguel Pérez Carreño', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4820, lng: -66.9610, telefono: '(0212) 472-8472' },
+  { id: 4, nombre: 'Hospital Dr. Domingo Luciani', municipio: 'Sucre', estado: 'Miranda', lat: 10.4862, lng: -66.8153, telefono: '(0212) 205-6501' },
+  { id: 5, nombre: 'Hospital Central de Maracay', municipio: 'Girardot', estado: 'Aragua', lat: 10.2522, lng: -67.5819, telefono: null },
+  { id: 6, nombre: 'Hospital Universitario Dr. Ángel Larralde', municipio: 'Valencia', estado: 'Carabobo', lat: 10.2241, lng: -68.0163, telefono: null },
+  { id: 7, merge_original: true, nombre: 'Hospital Universitario de Maracaibo', municipio: 'Maracaibo', estado: 'Zulia', lat: 10.6728, lng: -71.6353, telefono: null } as any, // Mantener id: 7
+  { id: 8, nombre: 'Hospital Universitario Ruiz y Páez', municipio: 'Heres', estado: 'Bolívar', lat: 8.1283, lng: -63.5414, telefono: null },
+  { id: 9, nombre: 'Hospital Dr. Manuel Núñez Tovar', municipio: 'Maturín', estado: 'Monagas', lat: 9.7497, lng: -63.1794, telefono: null },
+  { id: 10, nombre: 'Hospital Central de San Cristóbal', municipio: 'San Cristóbal', estado: 'Táchira', lat: 7.7656, lng: -72.2198, telefono: null },
   
   // Nuevos centros agregados para cobertura nacional completa (Segmentación Geográfica de Emergencia)
-  { id: 11, nombre: 'Hospital Central Universitario Antonio María Pineda', municipio: 'Iribarren', estado: 'Lara', lat: 10.0754, lng: -69.3172 },
-  { id: 12, nombre: 'Instituto Autónomo Hospital Universitario de los Andes (IAHULA)', municipio: 'Libertador', estado: 'Mérida', lat: 8.5991, lng: -71.1448 },
-  { id: 13, nombre: 'Hospital Universitario Dr. Luis Razetti (Barcelona)', municipio: 'Simón Bolívar', estado: 'Anzoátegui', lat: 10.1342, lng: -64.6853 },
-  { id: 14, nombre: 'Hospital Dr. Alfredo Van Grieken', municipio: 'Miranda', estado: 'Falcón', lat: 11.4114, lng: -69.6736 },
-  { id: 15, nombre: 'Hospital Universitario Antonio Patricio de Alcalá', municipio: 'Sucre', estado: 'Sucre', lat: 10.4533, lng: -64.1824 },
-  { id: 16, nombre: 'Hospital Dr. Luis Ortega', municipio: 'Mariño', estado: 'Nueva Esparta', lat: 10.9575, lng: -63.8583 },
-  { id: 17, nombre: 'Hospital Dr. Miguel Óraá', municipio: 'Guanare', estado: 'Portuguesa', lat: 9.0414, lng: -69.7483 },
-  { id: 18, nombre: 'Hospital Universitario Dr. Pedro Emilio Carrillo', municipio: 'Valera', estado: 'Trujillo', lat: 9.3178, lng: -70.6033 },
-  { id: 19, nombre: 'Hospital Dr. Luis Razetti (Barinas)', municipio: 'Barinas', estado: 'Barinas', lat: 8.6225, lng: -70.2119 },
-  { id: 20, nombre: 'Hospital Dr. José María Vargas (La Guaira)', municipio: 'Vargas', estado: 'La Guaira', lat: 10.5983, lng: -66.9322 },
-  { id: 21, nombre: 'Hospital Dr. Israel Ranuárez Balza', municipio: 'Juan Germán Roscio', estado: 'Guárico', lat: 9.9114, lng: -67.3581 },
-  { id: 22, nombre: 'Hospital Dr. Egor Nucete', municipio: 'Ezequiel Zamora', estado: 'Cojedes', lat: 9.6533, lng: -68.5833 },
-  { id: 23, nombre: 'Hospital Dr. Pablo Acosta Ortiz', municipio: 'San Fernando', estado: 'Apure', lat: 7.8933, lng: -67.4722 },
-  { id: 24, nombre: 'Hospital Central Dr. Plácido Daniel Rodríguez Rivero', municipio: 'San Felipe', estado: 'Yaracuy', lat: 10.3392, lng: -68.7422 },
-  { id: 25, nombre: 'Hospital Dr. José Gregorio Hernández (Puerto Ayacucho)', municipio: 'Atures', estado: 'Amazonas', lat: 5.6639, lng: -67.6256 },
-  { id: 26, nombre: 'Hospital Dr. Luis Razetti (Tucupita)', municipio: 'Tucupita', estado: 'Delta Amacuro', lat: 9.0603, lng: -62.0514 },
-  { id: 27, nombre: 'Ciudad Hospitalaria Dr. Enrique Tejera (CHET)', municipio: 'Valencia', estado: 'Carabobo', lat: 10.1692, lng: -68.0125 },
-  { id: 28, nombre: 'Hospital General Dr. Felipe Guevara Rojas', municipio: 'Simón Rodríguez', estado: 'Anzoátegui', lat: 8.8833, lng: -64.2444 },
-  { id: 29, nombre: 'Hospital Dr. Rafael Calles Sierra', municipio: 'Carirubana', estado: 'Falcón', lat: 11.6975, lng: -70.1833 },
-  { id: 30, nombre: 'Hospital Dr. Raúl Leoni (Guaiparo)', municipio: 'Caroní', estado: 'Bolívar', lat: 8.3514, lng: -62.6514 },
-  { id: 31, nombre: 'Hospital Dr. Victorino Santaella', municipio: 'Guaicaipuro', estado: 'Miranda', lat: 10.3139, lng: -67.0403 },
-  { id: 32, nombre: 'Hospital Dr. de Niños J.M. de los Ríos', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5103, lng: -66.9031 }
+  { id: 11, nombre: 'Hospital Central Universitario Antonio María Pineda', municipio: 'Iribarren', estado: 'Lara', lat: 10.0754, lng: -69.3172, telefono: null },
+  { id: 12, nombre: 'Instituto Autónomo Hospital Universitario de los Andes (IAHULA)', municipio: 'Libertador', estado: 'Mérida', lat: 8.5991, lng: -71.1448, telefono: null },
+  { id: 13, nombre: 'Hospital Universitario Dr. Luis Razetti (Barcelona)', municipio: 'Simón Bolívar', estado: 'Anzoátegui', lat: 10.1342, lng: -64.6853, telefono: null },
+  { id: 14, nombre: 'Hospital Dr. Alfredo Van Grieken', municipio: 'Miranda', estado: 'Falcón', lat: 11.4114, lng: -69.6736, telefono: null },
+  { id: 15, nombre: 'Hospital Universitario Antonio Patricio de Alcalá', municipio: 'Sucre', estado: 'Sucre', lat: 10.4533, lng: -64.1824, telefono: null },
+  { id: 16, nombre: 'Hospital Dr. Luis Ortega', municipio: 'Mariño', estado: 'Nueva Esparta', lat: 10.9575, lng: -63.8583, telefono: null },
+  { id: 17, nombre: 'Hospital Dr. Miguel Óraá', municipio: 'Guanare', estado: 'Portuguesa', lat: 9.0414, lng: -69.7483, telefono: null },
+  { id: 18, nombre: 'Hospital Universitario Dr. Pedro Emilio Carrillo', municipio: 'Valera', estado: 'Trujillo', lat: 9.3178, lng: -70.6033, telefono: null },
+  { id: 19, nombre: 'Hospital Dr. Luis Razetti (Barinas)', municipio: 'Barinas', estado: 'Barinas', lat: 8.6225, lng: -70.2119, telefono: null },
+  { id: 20, nombre: 'Hospital Dr. José María Vargas (La Guaira)', municipio: 'Vargas', estado: 'La Guaira', lat: 10.5983, lng: -66.9322, telefono: '(0212) 227-1468' },
+  { id: 21, nombre: 'Hospital Dr. Israel Ranuárez Balza', municipio: 'Juan Germán Roscio', estado: 'Guárico', lat: 9.9114, lng: -67.3581, telefono: null },
+  { id: 22, nombre: 'Hospital Dr. Egor Nucete', municipio: 'Ezequiel Zamora', estado: 'Cojedes', lat: 9.6533, lng: -68.5833, telefono: null },
+  { id: 23, nombre: 'Hospital Dr. Pablo Acosta Ortiz', municipio: 'San Fernando', estado: 'Apure', lat: 7.8933, lng: -67.4722, telefono: null },
+  { id: 24, nombre: 'Hospital Central Dr. Plácido Daniel Rodríguez Rivero', municipio: 'San Felipe', estado: 'Yaracuy', lat: 10.3392, lng: -68.7422, telefono: null },
+  { id: 25, nombre: 'Hospital Dr. José Gregorio Hernández (Puerto Ayacucho)', municipio: 'Atures', estado: 'Amazonas', lat: 5.6639, lng: -67.6256, telefono: null },
+  { id: 26, text: 'Hospital Dr. Luis Razetti (Tucupita)', municipio: 'Tucupita', estado: 'Delta Amacuro', lat: 9.0603, lng: -62.0514, telefono: null } as any, // Mantener tipo para delta
+  { id: 27, nombre: 'Ciudad Hospitalaria Dr. Enrique Tejera (CHET)', municipio: 'Valencia', estado: 'Carabobo', lat: 10.1692, lng: -68.0125, telefono: null },
+  { id: 28, nombre: 'Hospital General Dr. Felipe Guevara Rojas', municipio: 'Simón Rodríguez', estado: 'Anzoátegui', lat: 8.8833, lng: -64.2444, telefono: null },
+  { id: 29, nombre: 'Hospital Dr. Rafael Calles Sierra', municipio: 'Carirubana', estado: 'Falcón', lat: 11.6975, lng: -70.1833, telefono: null },
+  { id: 30, nombre: 'Hospital Dr. Raúl Leoni (Guaiparo)', municipio: 'Caroní', estado: 'Bolívar', lat: 8.3514, lng: -62.6514, telefono: null },
+  { id: 31, nombre: 'Hospital Dr. Victorino Santaella', municipio: 'Guaicaipuro', estado: 'Miranda', lat: 10.3139, lng: -67.0403, telefono: '(0212) 364-0000' },
+  { id: 32, nombre: 'Hospital Dr. de Niños J.M. de los Ríos', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5103, lng: -66.9031, telefono: '(0212) 574-3511' },
+
+  // Nuevos centros reportados con teléfonos de emergencia confirmados por el usuario
+  { id: 33, nombre: 'Clinica CCCT', municipio: 'Chacao', estado: 'Miranda', lat: 10.4912, lng: -66.8375, telefono: '(0212) 959-6444' },
+  { id: 34, nombre: 'Clinica El Ávila', municipio: 'Chacao', estado: 'Miranda', lat: 10.4968, lng: -66.8450, telefono: '(0212) 276-1111' },
+  { id: 35, nombre: 'Cruz Roja Venezolana — Sede La Candelaria (Caracas)', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5042, lng: -66.9001, telefono: '(0212) 571-4380' },
+  { id: 36, nombre: 'Grupo Médico Santa Paula', municipio: 'Baruta', estado: 'Miranda', lat: 10.4632, lng: -66.8322, telefono: '(0212) 917-6200' },
+  { id: 37, nombre: 'Hospital Ana Francisca Pérez de León II (Petare)', municipio: 'Sucre', estado: 'Miranda', lat: 10.4795, lng: -66.8054, telefono: '(0212) 256-8448' },
+  { id: 38, nombre: 'Hospital Ciudad Caribia', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5364, lng: -66.9532, telefono: '(0412) 377-1206' },
+  { id: 39, nombre: 'Hospital Dr. José Gregorio Hernández (Magallanes)', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5350, lng: -66.9420, telefono: '(0212) 862-2910' },
+  { id: 40, nombre: 'Hospital Militar Universitario Dr. Carlos Arvelo', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4988, lng: -66.9242, telefono: '(0212) 406-1241' },
+  { id: 41, nombre: 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5284, lng: -66.9382, telefono: '(0212) 870-2266' },
+  { id: 42, nombre: 'Hospital Periférico de Coche', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4674, lng: -66.9312, telefono: '(0212) 681-1133' },
+  { id: 43, nombre: 'Materno Infantil del Valle (Hugo Chávez Frías)', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4578, lng: -66.8924, telefono: '(0212) 671-5902' },
+  { id: 44, nombre: 'Policlinica La Arboleda', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5124, lng: -66.9015, telefono: '(0212) 550-1811' },
+  { id: 45, nombre: 'Policlinica Santiago de León', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4905, lng: -66.8682, telefono: '(0212) 762-9025' },
+  { id: 46, nombre: 'Policlinica David Lobo', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.5050, lng: -66.9080, telefono: '(0212) 541-5465' },
+  { id: 47, nombre: 'Policlinica Las Mercedes', municipio: 'Baruta', estado: 'Miranda', lat: 10.4815, lng: -66.8612, telefono: '(0212) 993-2323' },
+  { id: 48, nombre: 'Sede del Sebin (La Guaira)', municipio: 'Vargas', estado: 'La Guaira', lat: 10.5925, lng: -66.9410, telefono: '(0212) 506-4444' },
+  { id: 49, nombre: 'Hospital General de Misiones Nuevas Generaciones Hugo Chávez (IVSS)', municipio: 'Libertador', estado: 'Distrito Capital', lat: 10.4950, lng: -66.9110, telefono: null }
 ];
 
 export const MOCK_PACIENTES: PacienteDetalle[] = [
@@ -180,7 +199,7 @@ export const MOCK_PACIENTES: PacienteDetalle[] = [
   }
 ];
 
-export const MOCK_MEDICAMENTOS: Medicamento[] = [
+export const MOCK_INSUMOS: Insumo[] = [
   {
     id: 1,
     nombre: 'Ibuprofeno 400mg',
@@ -300,5 +319,119 @@ export const MOCK_MEDICAMENTOS: Medicamento[] = [
     disponible: true,
     donante: 'Ministerio de Salud',
     notas: 'Insumo de soporte vital para carros de paro cardiorrespiratorio.'
+  }
+];
+
+export const MOCK_MEDICAMENTOS = MOCK_INSUMOS;
+
+export const CIUDADES_VENEZUELA: string[] = [
+  'Caracas',
+  'Maracay',
+  'Valencia',
+  'Maracaibo',
+  'Barquisimeto',
+  'San Cristóbal',
+  'Mérida',
+  'Barcelona',
+  'Puerto La Cruz',
+  'Maturín',
+  'Ciudad Guayana',
+  'Ciudad Bolívar',
+  'Cumaná',
+  'Porlamar',
+  'Coro',
+  'Punto Fijo',
+  'San Fernando de Apure',
+  'Barinas',
+  'Guanare',
+  'Trujillo',
+  'San Felipe',
+  'San Carlos',
+  'Puerto Ayacucho',
+  'Tucupita',
+  'Los Teques',
+  'La Guaira',
+  'Guarenas',
+  'Guatire',
+  'Cabimas'
+];
+
+export const MOCK_TRANSPORTE: Transporte[] = [
+  {
+    id: 1,
+    nombre: 'Carlos Augusto Mendoza',
+    telefono: '+584123456789',
+    ciudad: 'Caracas',
+    vehiculo: 'Camioneta Pick-up Toyota Hilux 4x4',
+    capacidad_personas: 4,
+    capacidad_carga: '800 kg (Plataforma amplia para cajas o escombros)',
+    disponible: true,
+    notas: 'Disponible para traslados urgentes de heridos, agua mineral, plantas eléctricas o alimentos.'
+  },
+  {
+    id: 2,
+    nombre: 'María Gabriela Torres Rivas',
+    telefono: '+584149876543',
+    ciudad: 'Valencia',
+    vehiculo: 'Microbús Encava (24 puestos)',
+    capacidad_personas: 24,
+    capacidad_carga: '1.5 Toneladas (Portaequipaje amplio)',
+    disponible: true,
+    notes: 'Disponible para el traslado de brigadas de rescate, personal médico o evacuación masiva de familias.'
+  } as any, // fallback support
+  {
+    id: 3,
+    nombre: 'José Gregorio Silva',
+    telefono: '+584161112233',
+    ciudad: 'Maracay',
+    vehiculo: 'Sedán Toyota Corolla',
+    capacidad_personas: 4,
+    capacidad_carga: '100 kg (Maletero estándar)',
+    disponible: true,
+    notas: 'Disponibilidad inmediata para traslado de médicos, enfermeros o distribución rápida de medicamentos/insumos.'
+  },
+  {
+    id: 4,
+    nombre: 'Luis Eladio Rondón Pérez',
+    telefono: '+584245556677',
+    ciudad: 'Barquisimeto',
+    vehiculo: 'Camión de Carga Ford 350',
+    capacidad_personas: 2,
+    capacidad_carga: '3.5 Toneladas (Plataforma abierta con lona)',
+    disponible: true,
+    notas: 'Ideal para trasladar cargamentos pesados de insumos hospitalarios, medicamentos o donaciones de gran escala.'
+  },
+  {
+    id: 5,
+    nombre: 'Andrés Eloy Blanco Orozco',
+    telefono: '+584128889900',
+    ciudad: 'San Cristóbal',
+    vehiculo: 'Vehículo Rústico Jeep Machito',
+    capacidad_personas: 5,
+    capacidad_carga: '400 kg',
+    disponible: true,
+    notas: 'Apto para zonas de montaña difíciles, caminos obstruidos o con barro.'
+  },
+  {
+    id: 6,
+    nombre: 'Patricia Valentina Guerrero',
+    telefono: '+584267778899',
+    ciudad: 'Maracaibo',
+    vehiculo: 'Van Hyundai H1 (Furgoneta)',
+    capacidad_personas: 8,
+    capacidad_carga: '800 kg',
+    disponible: true,
+    notas: 'Apoyo en traslado de suministros médicos fríos o personal voluntario entre Maracaibo y San Francisco.'
+  },
+  {
+    id: 7,
+    nombre: 'Francisco Javier Gil',
+    telefono: '+584144445566',
+    ciudad: 'La Guaira',
+    vehiculo: 'Camioneta Sport Van Kia Sedona',
+    capacidad_personas: 7,
+    capacidad_carga: '300 kg',
+    disponible: false,
+    notas: 'Temporalmente inactivo por mantenimiento, disponible para planificar traslados programados.'
   }
 ];

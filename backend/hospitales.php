@@ -18,7 +18,7 @@ if ($method !== 'GET') {
 
 try {
     $stmt = $db->query("
-        SELECT id, nombre, municipio, lat, lng 
+        SELECT id, nombre, municipio, lat, lng, telefono 
         FROM hospitales 
         ORDER BY nombre ASC
     ");
@@ -32,7 +32,8 @@ try {
             'nombre' => $h['nombre'],
             'municipio' => $h['municipio'],
             'lat' => $h['lat'] !== null ? (float)$h['lat'] : null,
-            'lng' => $h['lng'] !== null ? (float)$h['lng'] : null
+            'lng' => $h['lng'] !== null ? (float)$h['lng'] : null,
+            'telefono' => $h['telefono'] ?? null
         ];
     }
     

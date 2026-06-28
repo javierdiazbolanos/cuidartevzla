@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { PacienteDetalle } from '../types';
-import { getPacienteDetalle } from '../apiClient';
-import { X, Calendar, Building, MapPin, Share2, AlertTriangle, MessageSquare, Info } from 'lucide-react';
+import { PacienteDetalle, Hospital } from '../types';
+import { getPacienteDetalle, getHospitales } from '../apiClient';
+import { X, Calendar, Building, MapPin, Share2, AlertTriangle, MessageSquare, Info, Phone } from 'lucide-react';
 
 interface PacienteDetailModalProps {
   pacienteId: number;
@@ -11,6 +11,7 @@ interface PacienteDetailModalProps {
 
 export default function PacienteDetailModal({ pacienteId, onClose, showToast }: PacienteDetailModalProps) {
   const [detail, setDetail] = useState<PacienteDetalle | null>(null);
+  const [hospitalInfo, setHospitalInfo] = useState<Hospital | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,10 +19,20 @@ export default function PacienteDetailModal({ pacienteId, onClose, showToast }: 
     let active = true;
     setLoading(true);
     getPacienteDetalle(pacienteId)
-      .then(data => {
+      .then(async data => {
         if (active) {
           setDetail(data);
           setLoading(false);
+          
+          try {
+            const list = await getHospitales();
+            const found = list.find(h => h.id === data.hospital_id || h.nombre.toLowerCase().includes(data.hospital.toLowerCase()));
+            if (found && active) {
+              setHospitalInfo(found);
+            }
+          } catch (e) {
+            console.warn('Error al buscar hospital para teléfono:', e);
+          }
         }
       })
       .catch(err => {
@@ -147,9 +158,20 @@ export default function PacienteDetailModal({ pacienteId, onClose, showToast }: 
           <div className="grid grid-cols-1 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
             <div className="flex gap-3">
               <Building className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
-              <div>
+              <div className="flex-1">
                 <span className="text-[10px] font-extrabold uppercase text-slate-400 font-mono block">Centro Médico</span>
                 <span className="text-sm font-bold text-slate-800 leading-snug">{detail.hospital}</span>
+                {hospitalInfo?.telefono && (
+                  <div className="mt-1.5 flex items-center gap-1.5 bg-sky-50 border border-sky-100/50 rounded-lg px-2.5 py-1 w-fit shadow-xs">
+                    <Phone className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                    <a 
+                      href={`tel:${hospitalInfo.telefono.replace(/[\s()\-]/g, '')}`} 
+                      className="text-[11px] font-extrabold text-sky-700 hover:underline flex items-center gap-1"
+                    >
+                      Llamar al {hospitalInfo.telefono}
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
 

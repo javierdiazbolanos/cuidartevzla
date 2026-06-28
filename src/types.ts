@@ -10,6 +10,7 @@ export interface Hospital {
   estado?: string | null;
   lat?: number | null;
   lng?: number | null;
+  telefono?: string | null;
 }
 
 export type EstadoPaciente = 'hospitalizado' | 'alta' | 'referido' | 'fallecido' | 'desconocido';
@@ -33,7 +34,7 @@ export interface PacienteDetalle extends Paciente {
   cedula_enmascarada?: string; // Duplicado de seguridad en español
 }
 
-export interface Medicamento {
+export interface Insumo {
   id: number;
   nombre: string;
   categoria: string;
@@ -44,4 +45,19 @@ export interface Medicamento {
   disponible: boolean;
   donante?: string | null;
   notas?: string | null;
+}
+
+export type Medicamento = Insumo;
+
+export interface Transporte {
+  id: number;
+  nombre: string;
+  telefono: string;
+  ciudad: string;
+  vehiculo: string;
+  capacidad_personas: number;
+  capacidad_carga: string;
+  disponible: boolean;
+  notas?: string | null;
+  cedula?: string;
 }
