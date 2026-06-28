@@ -11,6 +11,7 @@ import MedicamentoCard from './components/MedicamentoCard';
 import MedicamentoDetailModal from './components/MedicamentoDetailModal';
 import TransporteCard from './components/TransporteCard';
 import HospitalCard from './components/HospitalCard';
+import BuildingList from './components/BuildingList';
 import { 
   Search, 
   Filter, 
@@ -28,7 +29,7 @@ import {
 } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'pacientes' | 'insumos' | 'transporte' | 'hospitales'>('pacientes');
+  const [activeTab, setActiveTab] = useState<'pacientes' | 'insumos' | 'transporte' | 'hospitales' | 'edificios'>('pacientes');
   
   // Datos principales
   const [hospitales, setHospitales] = useState<Hospital[]>([]);
@@ -1450,6 +1451,13 @@ export default function App() {
             </div>
           );
         })()}
+
+        {/* ==================================
+            PESTAÑA 5: EDIFICIOS AFECTADOS 
+           ================================== */}
+        {activeTab === 'edificios' && (
+          <BuildingList />
+        )}
 
       </main>
 

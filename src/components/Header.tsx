@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Users, Pill, WifiOff, RefreshCw, AlertCircle, Car, Building2 } from 'lucide-react';
+import { Shield, Users, Pill, WifiOff, RefreshCw, AlertCircle, Car, Building2, Home } from 'lucide-react';
 import { isUsingMocks } from '../apiClient';
 
 interface HeaderProps {
-  activeTab: 'pacientes' | 'insumos' | 'transporte' | 'hospitales';
-  setActiveTab: (tab: 'pacientes' | 'insumos' | 'transporte' | 'hospitales') => void;
+  activeTab: 'pacientes' | 'insumos' | 'transporte' | 'hospitales' | 'edificios';
+  setActiveTab: (tab: 'pacientes' | 'insumos' | 'transporte' | 'hospitales' | 'edificios') => void;
   onRetry: () => void;
 }
 
@@ -106,6 +106,19 @@ export default function Header({ activeTab, setActiveTab, onRetry }: HeaderProps
           >
             <Users className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
             <span>PACIENTES</span>
+          </button>
+          <button
+            id="tab-edificios"
+            onClick={() => setActiveTab('edificios')}
+            className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 py-2.5 sm:py-3 px-1.5 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
+              activeTab === 'edificios'
+                ? 'bg-sky-600 text-white shadow-lg shadow-sky-100'
+                : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-100'
+            }`}
+            style={{ minHeight: '48px' }}
+          >
+            <Home className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+            <span>EDIFICIOS</span>
           </button>
           <button
             id="tab-insumos"

@@ -3,7 +3,7 @@
  * Terremotos de Venezuela - Junio de 2026
  */
 
-import { Hospital, Paciente, PacienteDetalle, Insumo, Medicamento, Transporte } from './types';
+import { Hospital, Paciente, PacienteDetalle, Insumo, Medicamento, Transporte, Edificio } from './types';
 import { MOCK_HOSPITALES, MOCK_PACIENTES, MOCK_INSUMOS, MOCK_TRANSPORTE } from './mockData';
 
 const MOCK_MEDICAMENTOS = MOCK_INSUMOS;
@@ -794,4 +794,32 @@ function mockEliminarTransporte(
   const newList = localList.filter(t => t.id !== id);
   saveLocalTransporteList(newList);
   return { success: true };
+}
+
+// ───────────────────────────────
+// EDIFICIOS AFECTADOS
+// ───────────────────────────────
+
+/**
+ * Obtiene la lista de edificios afectados con búsqueda y filtro por tipo de daño
+ */
+export async function getEdificios(q: string = '', tipo: string = ''): Promise<Edificio[]> {
+  try {
+    const apiBase = await getApiBase();
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (tipo) params.set('tipo', tipo);
+
+    const url = `${apiBase}/edificios.php?${params.toString()}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    const json = await res.json().catch(() => ({}));
+
+    if (res.ok && json.ok && Array.isArray(json.data)) {
+      return json.data;
+    }
+    return [];
+  } catch (err) {
+    console.warn('[Cuídarte] No se pudieron cargar edificios, usando caché local.', err);
+    return [];
+  }
 }

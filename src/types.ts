@@ -49,6 +49,14 @@ export interface Insumo {
 
 export type Medicamento = Insumo;
 
+export interface Edificio {
+  id: number;
+  nombre: string;
+  tipo_dano: 'total' | 'severo';
+  observacion: string;
+  enlace: string;
+}
+
 export interface Transporte {
   id: number;
   nombre: string;
