@@ -515,7 +515,7 @@ export default function App() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-sky-500"></span>
                   </span>
-                  📢 {stats ? `${stats.pacientes_count.toLocaleString()} registros` : ''}{stats?.ultimo_registro ? ` • ${formatStatsDate(stats.ultimo_registro)}` : ''}{stats?.ultima_actualizacion ? ` • ${stats.ultima_actualizacion}` : ''}
+                  📢 {stats ? `${stats.pacientes_count.toLocaleString()} registros` : ''}{stats?.ultima_actualizacion ? ` • ${stats.ultima_actualizacion}` : ''}
                 </span>
               </div>
 
@@ -680,7 +680,7 @@ export default function App() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-sky-500"></span>
                   </span>
-                  📢 {stats ? `${stats.pacientes_count.toLocaleString()} registros` : ''}{stats?.ultimo_registro ? ` • ${formatStatsDate(stats.ultimo_registro)}` : ''}{stats?.ultima_actualizacion ? ` • ${stats.ultima_actualizacion}` : ''}
+                  📢 {stats ? `${stats.pacientes_count.toLocaleString()} registros` : ''}{stats?.ultima_actualizacion ? ` • ${stats.ultima_actualizacion}` : ''}
                 </span>
               </div>
 
