@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getHospitales, getPacientes, getMedicamentos, getTransporte, isDataSaverEnabled, setDataSaverEnabled, clearApiCache, registrarTransporte, actualizarTransporte, eliminarTransporte } from './apiClient';
+import { getHospitales, getPacientes, getMedicamentos, getTransporte, isDataSaverEnabled, setDataSaverEnabled, clearApiCache, registrarTransporte, actualizarTransporte, eliminarTransporte, getApiBase } from './apiClient';
 import { Hospital, Paciente, Medicamento, Transporte } from './types';
 import { CIUDADES_VENEZUELA } from './mockData';
 import Header from './components/Header';
@@ -131,11 +131,14 @@ export default function App() {
   const formatStatsDate = (dateStr: string | null) => {
     if (!dateStr) return '';
     try {
-      const d = new Date(dateStr + 'T00:00:00-04:00'); // Venezuela UTC-4
+      // Parse YYYY-MM-DD manualmente (timezone-safe)
+      const [y, m, d] = dateStr.split('-').map(Number);
       const meses = ['enero','febrero','marzo','abril','mayo','junio',
                      'julio','agosto','septiembre','octubre','noviembre','diciembre'];
       const dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
-      return `${dias[d.getDay()]} ${d.getDate()} de ${meses[d.getMonth()]}`;
+      // Crear fecha como mediodía UTC para evitar desplazamientos de zona horaria
+      const date = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+      return `${dias[date.getUTCDay()]} ${d} de ${meses[m - 1]}`;
     } catch { return ''; }
   };
 
