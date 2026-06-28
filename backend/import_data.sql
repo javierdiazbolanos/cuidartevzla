@@ -4,17 +4,14 @@
 -- Ejecuta este script en tu administrador de base de datos (phpMyAdmin, etc.)
 -- ====================================================================
 
--- 1. DESACTIVAR RESTRICCIONES TEMPORALMENTE PARA CARGAR DE FORMA SEGURA
 SET FOREIGN_KEY_CHECKS = 0;
 
--- 2. LIMPIAR DATOS EXISTENTES PARA EVITAR DUPLICADOS (OPCIONAL - COMENTAR SI NO ES DESEADO)
 TRUNCATE TABLE medicamentos;
 TRUNCATE TABLE pacientes;
 TRUNCATE TABLE hospitales;
 TRUNCATE TABLE transporte;
 
--- 3. INSERTAR EL DIRECTORIO NACIONAL COMPLETO DE HOSPITALES (CON TELÉFONOS CONFIRMADOS)
--- Usamos INSERT INTO ... ON DUPLICATE KEY UPDATE para evitar errores si ya existen
+-- 3. INSERTAR EL DIRECTORIO NACIONAL COMPLETO DE HOSPITALES
 INSERT INTO hospitales (id, nombre, municipio, lat, lng, telefono) VALUES
 (1, 'Hospital Universitario de Caracas (HUC)', 'Libertador', 10.489700, -66.889400, '(0212) 605-4050'),
 (2, 'Hospital Dr. José María Vargas', 'Libertador', 10.517300, -66.918900, '(0212) 862-9965'),
@@ -26,26 +23,7 @@ INSERT INTO hospitales (id, nombre, municipio, lat, lng, telefono) VALUES
 (8, 'Hospital Universitario Ruiz y Páez', 'Heres', 8.128300, -63.541400, NULL),
 (9, 'Hospital Dr. Manuel Núñez Tovar', 'Maturín', 9.749700, -63.179400, NULL),
 (10, 'Hospital Central de San Cristóbal', 'San Cristóbal', 7.765600, -72.219800, NULL),
-(11, 'Hospital Central Universitario Antonio María Pineda', 'Iribarren', 10.075400, -69.317200, NULL),
-(12, 'Instituto Autónomo Hospital Universitario de los Andes (IAHULA)', 'Libertador', 8.599100, -71.144800, NULL),
-(13, 'Hospital Universitario Dr. Luis Razetti (Barcelona)', 'Simón Bolívar', 10.134200, -64.685300, NULL),
-(14, 'Hospital Dr. Alfredo Van Grieken', 'Miranda', 11.411400, -69.673600, NULL),
-(15, 'Hospital Universitario Antonio Patricio de Alcalá', 'Sucre', 10.453300, -64.182400, NULL),
-(16, 'Hospital Dr. Luis Ortega', 'Mariño', 10.957500, -63.858300, NULL),
-(17, 'Hospital Dr. Miguel Óraá', 'Guanare', 9.041400, -69.748300, NULL),
-(18, 'Hospital Universitario Dr. Pedro Emilio Carrillo', 'Valera', 9.317800, -70.603300, NULL),
-(19, 'Hospital Dr. Luis Razetti (Barinas)', 'Barinas', 8.622500, -70.211900, NULL),
 (20, 'Hospital Dr. José María Vargas (La Guaira)', 'Vargas', 10.598300, -66.932200, '(0212) 227-1468'),
-(21, 'Hospital Dr. Israel Ranuárez Balza', 'Juan Germán Roscio', 9.911400, -67.358100, NULL),
-(22, 'Hospital Dr. Egor Nucete', 'Ezequiel Zamora', 9.653300, -68.583300, NULL),
-(23, 'Hospital Dr. Pablo Acosta Ortiz', 'San Fernando', 7.893300, -67.472200, NULL),
-(24, 'Hospital Central Dr. Plácido Daniel Rodríguez Rivero', 'San Felipe', 10.339200, -68.742200, NULL),
-(25, 'Hospital Dr. José Gregorio Hernández (Puerto Ayacucho)', 'Atures', 5.663900, -67.625600, NULL),
-(26, 'Hospital Dr. Luis Razetti (Tucupita)', 'Tucupita', 9.060300, -62.051400, NULL),
-(27, 'Ciudad Hospitalaria Dr. Enrique Tejera (CHET)', 'Valencia', 10.169200, -68.012500, NULL),
-(28, 'Hospital General Dr. Felipe Guevara Rojas', 'Simón Rodríguez', 8.883300, -64.244400, NULL),
-(29, 'Hospital Dr. Rafael Calles Sierra', 'Carirubana', 11.697500, -70.183300, NULL),
-(30, 'Hospital Dr. Raúl Leoni (Guaiparo)', 'Caroní', 8.351400, -62.651400, NULL),
 (31, 'Hospital Dr. Victorino Santaella', 'Guaicaipuro', 10.313900, -67.040300, '(0212) 364-0000'),
 (32, 'Hospital Dr. de Niños J.M. de los Ríos', 'Libertador', 10.510300, -66.903100, '(0212) 574-3511'),
 (33, 'Clinica CCCT', 'Chacao', 10.491200, -66.837500, '(0212) 959-6444'),
@@ -59,32 +37,111 @@ INSERT INTO hospitales (id, nombre, municipio, lat, lng, telefono) VALUES
 (41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', 'Libertador', 10.528400, -66.938200, '(0212) 870-2266'),
 (42, 'Hospital Periférico de Coche', 'Libertador', 10.467400, -66.931200, '(0212) 681-1133'),
 (43, 'Materno Infantil del Valle (Hugo Chávez Frías)', 'Libertador', 10.457800, -66.892400, '(0212) 671-5902'),
-(44, 'Policlinica La Arboleda', 'Libertador', 10.512400, -66.901500, '(0212) 550-1811'),
-(45, 'Policlinica Santiago de León', 'Libertador', 10.490500, -66.868200, '(0212) 762-9025'),
-(46, 'Policlinica David Lobo', 'Libertador', 10.505000, -66.908000, '(0212) 541-5465'),
-(47, 'Policlinica Las Mercedes', 'Baruta', 10.481500, -66.861200, '(0212) 993-2323'),
 (48, 'Sede del Sebin (La Guaira)', 'Vargas', 10.592500, -66.941000, '(0212) 506-4444'),
-(49, 'Hospital General de Misiones Nuevas Generaciones Hugo Chávez (IVSS)', 'Libertador', 10.495000, -66.911000, NULL)
-ON DUPLICATE KEY UPDATE 
-  nombre = VALUES(nombre), 
-  municipio = VALUES(municipio), 
-  lat = VALUES(lat), 
-  lng = VALUES(lng),
-  telefono = VALUES(telefono);
+(49, 'Hospital General de Misiones Nuevas Generaciones Hugo Chávez (IVSS)', 'Libertador', 10.495000, -66.911000, NULL);
 
--- 4. INSERTAR LISTADO COMPLETO DE PACIENTES INICIALES REPORTADOS
--- Se calculan pre-normalizados los nombres (nombre_norm) para la búsqueda rápida con acentos y mayúsculas
+-- 4. INSERTAR LISTADO COMPLETO DE PACIENTES
 INSERT INTO pacientes (id, nombre, nombre_norm, cedula, edad, sexo, procedencia, hospital_id, hospital_texto, ingreso_fecha, ingreso_detalle, estado, posible_duplicado) VALUES
-(1, 'Alejandro José Rondón Castro', 'ALEJANDRO JOSE RONDON CASTRO', '12345452', 45, 'Masculino', 'La Vega, Caracas', 1, 'Hospital Universitario de Caracas (HUC)', '2026-06-25', 'Fractura de fémur izquierdo por caída de escombros. Estable, en traumatología.', 'hospitalizado', 0),
-(2, 'María Elena Silva de Pérez', 'MARIA ELENA SILVA DE PEREZ', '6234908', 68, 'Femenino', 'Petare, Edo. Miranda', 4, 'Hospital Dr. Domingo Luciani', '2026-06-24', 'Trauma torácico cerrado leve. Monitoreo cardiológico continuo por hipertensión.', 'hospitalizado', 0),
-(3, 'Yusleidy del Carmen Mendoza', 'YUSLEIDY DEL CARMEN MENDOZA', '20456114', 29, 'Femenino', 'Cútira, Catia, Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-26', 'Contusiones múltiples y escoriaciones superficiales. Dada de alta tras 24 horas de observación.', 'alta', 0),
-(4, 'Juan Bautista Delgado Uzcátegui', 'JUAN BAUTISTA DELGADO UZCATEGUI', '11234789', 52, 'Masculino', 'El Limón, Edo. Aragua', 5, 'Hospital Central de Maracay', '2026-06-25', 'Quemaduras de segundo grado en extremidades superiores. Referido a Unidad de Quemados en Caracas.', 'referido', 0),
-(5, 'Francisco Javier Gil Blanco', 'FRANCISCO JAVIER GIL BLANCO', '14552552', 37, 'Masculino', 'El Valle, Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-24', 'Politraumatismo generalizado. Registrado inicialmente con variaciones en su apellido.', 'hospitalizado', 1),
-(6, 'Francisco J. Gil Blanco', 'FRANCISCO J GIL BLANCO', '14552552', 37, 'Masculino', 'El Valle, Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-24', 'Fila duplicada en revisión de cédula. Coincide con Francisco Javier Gil Blanco.', 'hospitalizado', 1),
-(7, 'Carmen Alicia Rodríguez Infante', 'CARMEN ALICIA RODRIGUEZ INFANTE', '4234321', 73, 'Femenino', 'Barrio Sucre, San Cristóbal', 10, 'Hospital Central de San Cristóbal', '2026-06-25', 'Desorientada tras el sismo. Ingresada por vecinos de la zona. Se busca activamente a sus familiares.', 'desconocido', 0),
-(8, 'Santiago Andrés Gamarra', 'SANTIAGO ANDRES GAMARRA', '28456994', 8, 'Masculino', 'Naguanagua, Edo. Carabobo', 6, 'Hospital Universitario Dr. Ángel Larralde', '2026-06-26', 'Fractura de clavícula derecha. Post-quirúrgico inmediato. Acompañado por su madre.', 'hospitalizado', 0),
-(9, 'Pedro Celestino Infante', 'PEDRO CELESTINO INFANTE', '2345041', 81, 'Masculino', 'Soledad, Edo. Anzoátegui', 8, 'Hospital Dr. Luis Razetti', '2026-06-25', 'Paro cardiorrespiratorio refractario secundario a aplastamiento severo. Fallecido el 25/06/2026.', 'fallecido', 0),
-(10, 'Coromoto de Jesús Mendoza', 'COROMOTO DE JESUS MENDOZA', '10123812', 59, 'Femenino', 'La Cruz, Maturín', 9, 'Hospital Dr. Manuel Núñez Tovar', '2026-06-24', 'Crisis hipertensiva y shock de pánico severo tras el colapso de estructura residencial cercana.', 'hospitalizado', 0);
+(1, 'ABDLY ABDELYS', 'ABDLY ABDELYS', '26254624', 28, 'Femenino', 'Caracas', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Ingresado por emergencia de sismo. Estable.', 'hospitalizado', 0),
+(2, 'ABELLO MATILDE', 'ABELLO MATILDE', NULL, 36, 'Femenino', 'Caracas', 4, 'Hospital Dr. Domingo Luciani', '2026-06-25', 'En observación médica.', 'hospitalizado', 0),
+(3, 'Abello Wilmari', 'ABELLO WILMARI', NULL, 36, 'Femenino', 'Petare', 4, 'Hospital Dr. Domingo Luciani', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(4, 'ABREU REINA MARGARITA', 'ABREU REINA MARGARITA', '13890251', 60, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'En evaluación.', 'hospitalizado', 0),
+(5, 'ABREU REINA', 'ABREU REINA', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Posible duplicado de Reina Margarita.', 'hospitalizado', 1),
+(6, 'ABREU REYNA MARGARITA', 'ABREU REYNA MARGARITA', NULL, 60, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Duplicado confirmado.', 'hospitalizado', 1),
+(7, 'ACEVEDO ROSANGEL', 'ACEVEDO ROSANGEL', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'En emergencias.', 'hospitalizado', 0),
+(8, 'ACOSTA ANGEL', 'ACOSTA ANGEL', NULL, NULL, 'Masculino', 'Caracas', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Heridas leves.', 'hospitalizado', 0),
+(9, 'ACOSTA DANILSA', 'ACOSTA DANILSA', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(10, 'Acosta De Barazarte Danilsa Yris', 'ACOSTA DE BARAZARTE DANILSA YRIS', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'En observación.', 'hospitalizado', 0),
+(11, 'Acosta Edelmira', 'ACOSTA EDELMIRA', NULL, NULL, 'Femenino', 'Caracas', 4, 'Hospital Dr. Domingo Luciani', '2026-06-25', 'Control de pánico.', 'hospitalizado', 0),
+(12, 'ACOSTA JAIRO', 'ACOSTA JAIRO', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Fractura leve.', 'hospitalizado', 0),
+(13, 'ACOSTA MARCO', 'ACOSTA MARCO', NULL, NULL, 'Masculino', 'Caracas', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'En observación.', 'hospitalizado', 0),
+(14, 'Acosta Marcos', 'ACOSTA MARCOS', NULL, NULL, 'Masculino', 'Caracas', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Duplicado.', 'hospitalizado', 1),
+(15, 'ACOSTA RAMON', 'ACOSTA RAMON', NULL, NULL, 'Masculino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Control de hipertensión.', 'hospitalizado', 0),
+(16, 'ACUÑA JESUS', 'ACUNA JESUS', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(17, 'ADAMES LORENA', 'ADAMES LORENA', NULL, NULL, 'Femenino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Politraumatismo leve.', 'hospitalizado', 0),
+(18, 'ADAN LUIS', 'ADAN LUIS', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Herida en cuero cabelludo.', 'hospitalizado', 0),
+(19, 'ADRIAN JHOANNY', 'ADRIAN JHOANNY', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Crisis de ansiedad.', 'hospitalizado', 0),
+(20, 'ADRIAN MARIO', 'ADRIAN MARIO', NULL, NULL, 'Masculino', 'Caracas', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Traumatismo cerrado.', 'hospitalizado', 0),
+(21, 'ADRIANZA JONATHAN', 'ADRIANZA JONATHAN', NULL, NULL, 'Masculino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Contusiones.', 'hospitalizado', 0),
+(22, 'AGAMEZ MIRIAN', 'AGAMEZ MIRIAN', NULL, NULL, 'Femenino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(23, 'AGUANA ANGEL', 'AGUANA ANGEL', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(24, 'AGUANA LUIS', 'AGUANA LUIS', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Esguince tobillo.', 'hospitalizado', 0),
+(25, 'Aguiar Eladia', 'AGUIAR ELADIA', NULL, NULL, 'Femenino', 'Caracas', 1, 'Hospital Universitario de Caracas (HUC)', '2026-06-25', 'En emergencias.', 'hospitalizado', 0),
+(26, 'AGUIAR EMILIO', 'AGUIAR EMILIO', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(27, 'AGUILAR ENMA', 'AGUILAR ENMA', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Crisis hipertensiva.', 'hospitalizado', 0),
+(28, 'AGUILAR GABRIELA', 'AGUILAR GABRIELA', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(29, 'AGUILAR LISBETH', 'AGUILAR LISBETH', NULL, NULL, 'Femenino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Contusión cerebral leve.', 'hospitalizado', 0),
+(30, 'AGUILAR RAISA', 'AGUILAR RAISA', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'En observación.', 'hospitalizado', 0),
+(31, 'AGUILERA EDINSON', 'AGUILERA EDINSON', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(32, 'AGUILERA ISABEL', 'AGUILERA ISABEL', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Control cardiológico.', 'hospitalizado', 0),
+(33, 'AGUILERA JOSUE', 'AGUILERA JOSUE', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Fractura leve.', 'hospitalizado', 0),
+(34, 'AGUILERA LORENZO', 'AGUILERA LORENZO', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Heridas superficiales.', 'hospitalizado', 0),
+(35, 'AGUILERA MARIA', 'AGUILERA MARIA', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(36, 'AGUIN JOSMER', 'AGUIN JOSMER', NULL, NULL, 'Masculino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'En observación.', 'hospitalizado', 0),
+(37, 'AGUIRRE GLEYDE', 'AGUIRRE GLEYDE', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Crisis de ansiedad.', 'hospitalizado', 0),
+(38, 'AGUIRRE MERCEDES', 'AGUIRRE MERCEDES', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(39, 'AGUIRRE YESSICA', 'AGUIRRE YESSICA', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Heridas cortantes.', 'hospitalizado', 0),
+(40, 'Alarcon Hector', 'ALARCON HECTOR', NULL, NULL, 'Masculino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(41, 'ALARCON JAVIER', 'ALARCON JAVIER', NULL, NULL, 'Masculino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Control médico.', 'hospitalizado', 0),
+(42, 'ALARCON LUISA', 'ALARCON LUISA', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Politraumatismo.', 'hospitalizado', 0),
+(43, 'ALASTRE GLENYS', 'ALASTRE GLENYS', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(44, 'ALBARRAN ARGENIS', 'ALBARRAN ARGENIS', NULL, NULL, 'Masculino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Herida en pierna.', 'hospitalizado', 0),
+(45, 'ALBARRAN ARGENIS', 'ALBARRAN ARGENIS', NULL, NULL, 'Masculino', 'Caracas', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(46, 'ALCALA ANGELICA', 'ALCALA ANGELICA', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Esguince.', 'hospitalizado', 0),
+(47, 'ALCALA MANUEL', 'ALCALA MANUEL', NULL, NULL, 'Masculino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Politraumatismo.', 'hospitalizado', 0),
+(48, 'ALCALA MIGUEL', 'ALCALA MIGUEL', NULL, NULL, 'Masculino', 'Caracas', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(49, 'ALCALA NESTOR', 'ALCALA NESTOR', NULL, NULL, 'Masculino', 'Caracas', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'En observación.', 'hospitalizado', 0),
+(50, 'ALCALA NORELYS', 'ALCALA NORELYS', NULL, NULL, 'Femenino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'En emergencias.', 'hospitalizado', 0),
+(51, 'ALCALA NORELYS', 'ALCALA NORELYS', NULL, NULL, 'Femenino', 'Caracas', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(52, 'ALCALA NORELYS YULIMAR', 'ALCALA NORELYS YULIMAR', NULL, NULL, 'Femenino', 'Caracas', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Posible duplicado.', 'hospitalizado', 1),
+(53, 'ALCEGA MILENA', 'ALCEGA MILENA', NULL, NULL, 'Femenino', 'Caracas', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Control tensional.', 'hospitalizado', 0),
+(54, 'ALCORTA LUIS', 'ALCORTA LUIS', NULL, NULL, 'Masculino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Fractura leve.', 'hospitalizado', 0),
+(55, 'ALDANA ALICIA', 'ALDANA ALICIA', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(56, 'ALDANA EDUARDO', 'ALDANA EDUARDO', NULL, NULL, 'Masculino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Politraumatismo leve.', 'hospitalizado', 0),
+(57, 'ALDANA JOSE', 'ALDANA JOSE', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Esguince.', 'hospitalizado', 0),
+(58, 'ALDANA KATERINE', 'ALDANA KATERINE', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Herida en brazo.', 'hospitalizado', 0),
+(59, 'ALDANA REBECA', 'ALDANA REBECA', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Control de pánico.', 'hospitalizado', 0),
+(60, 'ALFARO MARIANNY', 'ALFARO MARIANNY', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(61, 'ALFONZO EMILIANO', 'ALFONZO EMILIANO', NULL, NULL, 'Masculino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Heridas cortantes.', 'hospitalizado', 0),
+(62, 'ALFONZO EMILIANO', 'ALFONZO EMILIANO', NULL, NULL, 'Masculino', 'Caracas', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(63, 'ALFONZO MAGALYS', 'ALFONZO MAGALYS', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(64, 'ALFONZO YRENE', 'ALFONZO YRENE', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Crisis de pánico.', 'hospitalizado', 0),
+(65, 'ALISTE ISIDRA', 'ALISTE ISIDRA', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Control médico.', 'hospitalizado', 0),
+(66, 'ALMEA MARIA', 'ALMEA MARIA', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(67, 'ALMEA MARIA GREGORIA', 'ALMEA MARIA GREGORIA', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Posible duplicado.', 'hospitalizado', 1),
+(68, 'ALMENDOZA CARMEN', 'ALMENDOZA CARMEN', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'En observación.', 'hospitalizado', 0),
+(69, 'ALMENDOZA JORGE', 'ALMENDOZA JORGE', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Fractura leve.', 'hospitalizado', 0),
+(70, 'ALTUBE GERARDO', 'ALTUBE GERARDO', NULL, NULL, 'Masculino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Herida en pierna.', 'hospitalizado', 0),
+(71, 'ALVARADO ALEXANDER', 'ALVARADO ALEXANDER', NULL, NULL, 'Masculino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(72, 'ALVARADO CARLOS', 'ALVARADO CARLOS', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Control de trauma.', 'hospitalizado', 0),
+(73, 'ALVARADO ELIZABETH', 'ALVARADO ELIZABETH', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Crisis hipertensiva.', 'hospitalizado', 0),
+(74, 'ALVARADO JESUS', 'ALVARADO JESUS', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(75, 'ALVARADO JOSE', 'ALVARADO JOSE', NULL, NULL, 'Masculino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(76, 'ALVARADO LUIS', 'ALVARADO LUIS', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Contusiones.', 'hospitalizado', 0),
+(77, 'ALVARADO MARIA', 'ALVARADO MARIA', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(78, 'ALVARADO NELLY', 'ALVARADO NELLY', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Politraumatismo.', 'hospitalizado', 0),
+(79, 'ALVARADO YELITZA', 'ALVARADO YELITZA', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Crisis de ansiedad.', 'hospitalizado', 0),
+(80, 'ALVAREZ ALFREDO', 'ALVAREZ ALFREDO', NULL, NULL, 'Masculino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Fractura leve.', 'hospitalizado', 0),
+(81, 'ALVAREZ ALICIA', 'ALVAREZ ALICIA', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(82, 'ALVAREZ ANA', 'ALVAREZ ANA', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'En emergencias.', 'hospitalizado', 0),
+(83, 'ALVAREZ DANIELA', 'ALVAREZ DANIELA', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(84, 'ALVAREZ FRANCIS', 'ALVAREZ FRANCIS', NULL, NULL, 'Femenino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Crisis de pánico.', 'hospitalizado', 0),
+(85, 'ALVAREZ INGRID', 'ALVAREZ INGRID', NULL, NULL, 'Femenino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Control de hipertensión.', 'hospitalizado', 0),
+(86, 'ALVAREZ JAIRO', 'ALVAREZ JAIRO', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Herida leve.', 'hospitalizado', 0),
+(87, 'ALVAREZ JOSE', 'ALVAREZ JOSE', NULL, NULL, 'Masculino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Contusiones.', 'hospitalizado', 0),
+(88, 'ALVAREZ JOSE', 'ALVAREZ JOSE', NULL, NULL, 'Masculino', 'Caracas', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(89, 'ALVAREZ LISBETH', 'ALVAREZ LISBETH', NULL, NULL, 'Femenino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Crisis de pánico.', 'hospitalizado', 0),
+(90, 'ALVAREZ MARCOS', 'ALVAREZ MARCOS', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(91, 'ALVAREZ MIGUEL', 'ALVAREZ MIGUEL', NULL, NULL, 'Masculino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Herida en brazo.', 'hospitalizado', 0),
+(92, 'ALVAREZ NESTOR', 'ALVAREZ NESTOR', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(93, 'ALVAREZ RAMON', 'ALVAREZ RAMON', NULL, NULL, 'Masculino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(94, 'ALVAREZ ROSA', 'ALVAREZ ROSA', NULL, NULL, 'Femenino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Crisis hipertensiva.', 'hospitalizado', 0),
+(95, 'ALVAREZ YOLANDA', 'ALVAREZ YOLANDA', NULL, NULL, 'Femenino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(96, 'ALZURO KEVIN', 'ALZURO KEVIN', NULL, NULL, 'Masculino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(97, 'ALZURO LUIS', 'ALZURO LUIS', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Trauma leve.', 'hospitalizado', 0),
+(98, 'AMADIZ CARMEN', 'AMADIZ CARMEN', NULL, NULL, 'Femenino', 'Caracas', 3, 'Hospital Miguel Pérez Carreño', '2026-06-25', 'Estable.', 'hospitalizado', 0),
+(99, 'AMADO JUAN', 'AMADO JUAN', NULL, NULL, 'Masculino', 'Caracas', 2, 'Hospital Dr. José María Vargas', '2026-06-25', 'En observación.', 'hospitalizado', 0),
+(100, 'AMARILLO GUSTAVO', 'AMARILLO GUSTAVO', NULL, NULL, 'Masculino', 'Catia', 41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', '2026-06-25', 'Esguince.', 'hospitalizado', 0);
 
 -- 5. INSERTAR CATÁLOGO DE MEDICAMENTOS Y DONACIONES EN STOCK
 INSERT INTO medicamentos (id, nombre, nombre_norm, categoria, cantidad, unidad, hospital_id, hospital_texto, disponible, donante, notas) VALUES
@@ -109,9 +166,4 @@ INSERT INTO transporte (id, nombre, nombre_norm, telefono, ciudad, vehiculo, cap
 (6, 'Patricia Valentina Guerrero', 'PATRICIA VALENTINA GUERRERO', '+584267778899', 'Maracaibo', 'Van Hyundai H1 (Furgoneta)', 8, '800 kg', 1, 'Apoyo en traslado de suministros médicos fríos o personal voluntario entre Maracaibo y San Francisco.'),
 (7, 'Francisco Javier Gil', 'FRANCISCO JAVIER GIL', '+584144445566', 'La Guaira', 'Camioneta Sport Van Kia Sedona', 7, '300 kg', 0, 'Temporalmente inactivo por mantenimiento, disponible para planificar traslados programados.');
 
--- 6. VOLVER A ACTIVAR RESTRICCIONES DE CLAVES FORÁNEAS
 SET FOREIGN_KEY_CHECKS = 1;
-
--- ====================================================================
--- ¡LISTO! Script de datos ejecutado correctamente.
--- ====================================================================
