@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Users, Pill, WifiOff, RefreshCw, AlertCircle, Car, Building2, Home } from 'lucide-react';
+import { Shield, Users, Pill, WifiOff, RefreshCw, AlertCircle, Car, Building2, Home, Share2 } from 'lucide-react';
 import { isUsingMocks } from '../apiClient';
 
 interface HeaderProps {
@@ -11,6 +11,34 @@ interface HeaderProps {
 export default function Header({ activeTab, setActiveTab, onRetry }: HeaderProps) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showDemoBanner, setShowDemoBanner] = useState(false);
+  const [shared, setShared] = useState(false);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'Cuídarte Venezuela - Sismo 2026',
+      text: 'Busca a tus familiares y conocidos afectados por el terremoto en Venezuela. Lista oficial de pacientes, edificios afectados y centros de ayuda.',
+      url: 'https://cuidartevzla.freedev.app/',
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        setShared(true);
+        setTimeout(() => setShared(false), 2000);
+      }
+    } catch {
+      // User cancelled or not supported — try clipboard
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        setShared(true);
+        setTimeout(() => setShared(false), 2000);
+      } catch {
+        // Nothing we can do
+      }
+    }
+  };
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -64,7 +92,7 @@ export default function Header({ activeTab, setActiveTab, onRetry }: HeaderProps
           <div className="flex items-center gap-3">
             {/* Logo de Cuídarte Venezuela en SVG de alta resolución */}
             <img 
-              src="/logo_cuidarte.svg" 
+              src="/logo_cuidarte.svg?v=2" 
               alt="Logo Cuídarte Venezuela" 
               className="w-14 h-14 shrink-0 shadow-md shadow-sky-200/50 rounded-2xl select-none object-contain" 
               id="logo-cuidarte-vzla"
@@ -83,13 +111,43 @@ export default function Header({ activeTab, setActiveTab, onRetry }: HeaderProps
             </div>
           </div>
 
-          {/* Información del Estado del Sismo */}
-          <div className="hidden md:flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5 text-right">
-            <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></div>
-            <span className="text-xs text-slate-600 font-bold">
-              Busca a tu gente totalmente gratis
-            </span>
+          {/* Botón Compartir + Estado */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm transition-all shadow-md shadow-sky-200 active:scale-95 cursor-pointer"
+              style={{ minHeight: '44px' }}
+              title="Compartir esta página"
+            >
+              {shared ? (
+                <>
+                  <span className="text-base">✓</span>
+                  <span className="hidden sm:inline">¡Enlace copiado!</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Compartir</span>
+                </>
+              )}
+            </button>
+
+            {/* Indicador de Estado (escritorio) */}
+            <div className="hidden md:flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5">
+              <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></div>
+              <span className="text-xs text-slate-600 font-bold whitespace-nowrap">
+                Busca a tu gente totalmente gratis
+              </span>
+            </div>
           </div>
+        </div>
+
+        {/* Info estado (móvil) */}
+        <div className="md:hidden mt-2 flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5">
+          <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></div>
+          <span className="text-xs text-slate-600 font-bold">
+            Busca a tu gente totalmente gratis
+          </span>
         </div>
 
         {/* Sistema de Pestañas (Tabs) con Touch Targets Grandes (mínimo 44px) */}
