@@ -6,12 +6,16 @@ declare(strict_types=1);
  * Terremotos de Venezuela - Junio de 2026
  */
 
-// --- CONFIGURACIÓN DE BASE DE DATOS Y SEGURIDAD (EDITAR EN PRODUCCIÓN) ---
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'cuidarte_db');
-define('DB_USER', 'cuidarte_user');
-define('DB_PASS', 'cuidarte_password_secure_2026');
-define('CODIGO_VOLUNTARIO', 'VENEZUELA_2026_DISASTER_RELIEF'); // Mínimo 10 caracteres
+// --- CONFIGURACIÓN DE BASE DE DATOS Y SEGURIDAD (PRODUCCIÓN InfinityFree) ---
+define('DB_HOST', 'sql303.infinityfree.com');
+define('DB_NAME', 'if0_42285358_if0_42285358_cuidartevzla');
+define('DB_USER', 'if0_42285358');
+define('DB_PASS', 'P2CJJAJY8EhJcOm');
+define('CODIGO_VOLUNTARIO', 'VENEZUELA_2026_DISASTER_RELIEF'); // Código maestro (legacy)
+// Códigos de voluntarios autorizados (separados por coma)
+define('CODIGOS_VOLUNTARIOS_PERMITIDOS', '15731877,4078817688,VENEZUELA_2026_DISASTER_RELIEF');
+// Códigos de superusuario autorizados para operaciones administrativas (borrado de cargas, backups, etc.)
+define('SUPER_USER_CODES', '15731877,4078817688');
 
 /**
  * Obtiene la conexión PDO singleton
@@ -87,18 +91,63 @@ function json_error(string $message, int $code = 400): void {
  * Requiere que se envíe un código de voluntario válido en la cabecera HTTP_X_CODIGO_VOLUNTARIO
  */
 function require_volunteer_code(): void {
-    $headers = array_change_key_case(getallheaders(), CASE_LOWER);
-    $received_code = '';
+    // Usar la misma lógica de extracción que get_volunteer_code_from_request()
+    // (incluye fallback ?codigo= para CGI donde los headers no están disponibles)
+    $received_code = get_volunteer_code_from_request();
 
+    if (empty($received_code)) {
+        json_error('Acceso denegado. Código de voluntario ausente.', 401);
+    }
+
+    // Validar contra la lista de códigos permitidos
+    $codigos_permitidos = array_map('trim', explode(',', CODIGOS_VOLUNTARIOS_PERMITIDOS));
+    if (!in_array($received_code, $codigos_permitidos, true)) {
+        json_error('Acceso denegado. Código de voluntario no autorizado.', 401);
+    }
+    
+    // Guardar globalmente para que otros endpoints puedan usarlo sin re-extraer
+    $GLOBALS['CUIDARTE_VOLUNTEER_CODE'] = $received_code;
+}
+
+/**
+ * Verifica si el código de voluntario tiene privilegios de superusuario
+ * (operaciones administrativas: borrado de cargas, backups, etc.)
+ */
+function isSuperUser(string $codigo): bool {
+    $superCodes = array_map('trim', explode(',', SUPER_USER_CODES));
+    return in_array($codigo, $superCodes, true);
+}
+
+/**
+ * Extrae el código de voluntario de los headers HTTP usando la misma
+ * lógica que require_volunteer_code() (getallheaders → apache → $_SERVER)
+ * pero sin hacer exit — devuelve string vacío si no se encuentra.
+ */
+function get_volunteer_code_from_request(): string {
+    // Si require_volunteer_code() ya se ejecutó, usar el código validado guardado
+    if (!empty($GLOBALS['CUIDARTE_VOLUNTEER_CODE'])) {
+        return $GLOBALS['CUIDARTE_VOLUNTEER_CODE'];
+    }
+    
+    // Fallback para CGI: query parameter ?codigo=15731877
+    if (!empty($_GET['codigo'])) {
+        return $_GET['codigo'];
+    }
+    
+    $headers = [];
+    if (function_exists('getallheaders')) {
+        $headers = array_change_key_case(getallheaders(), CASE_LOWER);
+    } elseif (function_exists('apache_request_headers')) {
+        $headers = array_change_key_case(apache_request_headers(), CASE_LOWER);
+    }
+    
     if (isset($headers['x-codigo-voluntario'])) {
-        $received_code = $headers['x-codigo-voluntario'];
+        return $headers['x-codigo-voluntario'];
     } elseif (isset($_SERVER['HTTP_X_CODIGO_VOLUNTARIO'])) {
-        $received_code = $_SERVER['HTTP_X_CODIGO_VOLUNTARIO'];
+        return $_SERVER['HTTP_X_CODIGO_VOLUNTARIO'];
     }
-
-    if (empty($received_code) || !hash_equals(CODIGO_VOLUNTARIO, $received_code)) {
-        json_error('Acceso denegado. Código de voluntario inválido o ausente.', 401);
-    }
+    
+    return '';
 }
 
 /**
@@ -517,4 +566,83 @@ function paciente_identico(array $existente, array $nuevo): bool {
     }
     
     return true;
+}
+
+/**
+ * Homogeneiza los nombres de todos los pacientes a Proper Case y limpia campos.
+ * 
+ * Procesa todos los registros de la tabla pacientes y:
+ * - Convierte el campo 'nombre' a Proper Case (usando capitalize_name)
+ * - Actualiza 'nombre_norm' a MAYÚSCULAS sin acentos (usando norm_nombre)
+ * - Limpia la cédula a solo números (usando clean_cedula)
+ * - Sólo actualiza si hay cambios reales.
+ * 
+ * Devuelve un array con estadísticas de la operación.
+ * 
+ * @param PDO $db Conexión a base de datos
+ * @return array Estadísticas: total, nombre_cambiado, nombre_norm_cambiado, cedula_limpia, errores
+ */
+function homogenize_patient_names(PDO $db): array {
+    $stats = [
+        'total' => 0,
+        'nombre_cambiado' => 0,
+        'nombre_norm_cambiado' => 0,
+        'cedula_limpia' => 0,
+        'errores' => 0,
+    ];
+    
+    try {
+        // Contar total
+        $stmtCount = $db->query("SELECT COUNT(*) FROM pacientes");
+        $stats['total'] = (int)$stmtCount->fetchColumn();
+        
+        // Seleccionar todos los pacientes para procesar en lotes (evitar memory issues)
+        $stmt = $db->query("SELECT id, nombre, nombre_norm, cedula FROM pacientes");
+        $patients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        foreach ($patients as $patient) {
+            $id = (int)$patient['id'];
+            $nombreOriginal = $patient['nombre'] ?? '';
+            $nombreNormOriginal = $patient['nombre_norm'] ?? '';
+            $cedulaOriginal = $patient['cedula'] ?? '';
+            
+            $nombreNuevo = capitalize_name($nombreOriginal);
+            $nombreNormNuevo = norm_nombre($nombreOriginal);
+            $cedulaNueva = clean_cedula($cedulaOriginal);
+            
+            $changes = [];
+            $params = [];
+            
+            if ($nombreNuevo !== $nombreOriginal) {
+                $changes[] = "nombre = ?";
+                $params[] = $nombreNuevo;
+                $stats['nombre_cambiado']++;
+            }
+            
+            if ($nombreNormNuevo !== $nombreNormOriginal) {
+                $changes[] = "nombre_norm = ?";
+                $params[] = $nombreNormNuevo;
+                $stats['nombre_norm_cambiado']++;
+            }
+            
+            if ($cedulaNueva !== $cedulaOriginal && $cedulaNueva !== null) {
+                $changes[] = "cedula = ?";
+                $params[] = $cedulaNueva;
+                $stats['cedula_limpia']++;
+            }
+            
+            if (!empty($changes)) {
+                $params[] = $id;
+                $sql = "UPDATE pacientes SET " . implode(", ", $changes) . " WHERE id = ?";
+                $stmtUpd = $db->prepare($sql);
+                $stmtUpd->execute($params);
+            }
+        }
+        
+    } catch (PDOException $e) {
+        error_log("homogenize_patient_names: " . $e->getMessage());
+        $stats['errores']++;
+    }
+    
+    return $stats;
 }

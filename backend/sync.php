@@ -5,8 +5,43 @@ if (function_exists('opcache_invalidate')) {
     opcache_invalidate(__FILE__, true);
 }
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+ini_set('display_errors', 0);  // Off — lo manejamos nosotros
+ini_set('display_startup_errors', 0);
+
+// Bufferar TODO el output — si PHP explota, limpiamos el buffer y devolvemos JSON
+ob_start();
+
+// Capturar excepciones no atrapadas
+set_exception_handler(function(Throwable $e) {
+    ob_end_clean();
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode([
+        'ok' => false,
+        'error' => $e->getMessage(),
+        'type' => get_class($e),
+        'file' => basename($e->getFile()),
+        'line' => $e->getLine(),
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+});
+
+// Capturar errores fatales (memory, timeout, etc.)
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR])) {
+        ob_end_clean();
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode([
+            'ok' => false,
+            'error' => 'FATAL: ' . $error['message'],
+            'file' => basename($error['file']),
+            'line' => $error['line'],
+            'memory' => memory_get_usage(true),
+            'memory_limit' => ini_get('memory_limit'),
+            'time_limit' => ini_get('max_execution_time'),
+        ], JSON_UNESCAPED_UNICODE);
+    }
+});
 
 /**
  * Cuídarte Venezuela - Motor de Deduplicación de Pacientes (deduplicate.php)
@@ -151,16 +186,6 @@ try {
 // ============================================================================
 // 3. TRANSACCIÓN PRINCIPAL
 // ============================================================================
-$db->beginTransaction();
-
-// Registrar la carga en carga_log para trazabilidad
-$codigo_voluntario = get_volunteer_code_from_request() ?: 'desconocido';
-$ip_bin = inet_pton($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0') ?: inet_pton('0.0.0.0');
-$stmtCarga = $db->prepare("INSERT INTO carga_log (carga_ip, carga_codigo) VALUES (?, ?)");
-$stmtCarga->execute([$ip_bin, $codigo_voluntario]);
-$carga_id = (int)$db->lastInsertId();
-$carga_secuencial = 0;
-
 $nuevos = 0;
 $mergeados = 0;
 $sin_cambios = 0;
@@ -168,6 +193,16 @@ $errores = 0;
 $detalle = [];
 
 try {
+    $db->beginTransaction();
+
+    // Registrar la carga en carga_log para trazabilidad
+    $codigo_voluntario = get_volunteer_code_from_request() ?: 'desconocido';
+    $ip_bin = inet_pton($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0') ?: inet_pton('0.0.0.0');
+    $stmtCarga = $db->prepare("INSERT INTO carga_log (carga_ip, carga_codigo) VALUES (?, ?)");
+    $stmtCarga->execute([$ip_bin, $codigo_voluntario]);
+    $carga_id = (int)$db->lastInsertId();
+    $carga_secuencial = 0;
+
     foreach ($pacientes_data as $index => $row) {
         $fila_num = $index + 1;
         
@@ -211,7 +246,7 @@ try {
         
         if (!empty($cedula)) {
             $stmtCedula->execute([$cedula]);
-            $matched_paciente = $stmtCedula->fetch();
+            $matched_paciente = $stmtCedula->fetch() ?: null;
             if ($matched_paciente) {
                 $match_tipo = 'cedula';
             }
@@ -325,9 +360,11 @@ try {
     ];
     
     echo json_encode($reporte, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    ob_end_flush();
     
 } catch (Exception $e) {
     $db->rollBack();
+    ob_end_clean();
     json_error('Error procesando deduplicación: ' . $e->getMessage(), 500);
 }
 
