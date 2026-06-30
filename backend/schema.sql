@@ -1,6 +1,17 @@
 -- Cuídarte Venezuela - Esquema de Base de Datos MySQL
 -- Terremotos de Venezuela - Junio de 2026
 
+-- Tabla de trazabilidad de cargas
+CREATE TABLE carga_log (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  carga_timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  carga_ip VARBINARY(16) NOT NULL COMMENT 'IP en formato binario (inet_pton)',
+  carga_codigo VARCHAR(20) NOT NULL COMMENT 'Código de voluntario',
+  PRIMARY KEY (id),
+  INDEX idx_carga_timestamp (carga_timestamp),
+  INDEX idx_carga_codigo (carga_codigo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE hospitales (
   id INT UNSIGNED NOT NULL,
   nombre VARCHAR(200) NOT NULL,
@@ -15,8 +26,8 @@ CREATE TABLE hospitales (
 CREATE TABLE pacientes (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   id_origen INT UNSIGNED NULL,
-  nombre VARCHAR(150) NOT NULL,
-  nombre_norm VARCHAR(150) NOT NULL,
+  nombre VARCHAR(200) NOT NULL,
+  nombre_norm VARCHAR(200) NOT NULL,
   cedula VARCHAR(15) NULL,
   edad TINYINT UNSIGNED NULL,
   sexo ENUM('Masculino','Femenino','Desconocido') NOT NULL DEFAULT 'Desconocido',
@@ -29,13 +40,17 @@ CREATE TABLE pacientes (
   posible_duplicado TINYINT(1) NOT NULL DEFAULT 0,
   creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   actualizado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  carga_id INT UNSIGNED NULL COMMENT 'FK a carga_log.id',
+  carga_secuencial INT UNSIGNED NULL COMMENT 'N° secuencial dentro de la carga',
   PRIMARY KEY (id),
   KEY idx_nombre_norm (nombre_norm),
   KEY idx_cedula (cedula),
   KEY idx_hospital (hospital_id),
   KEY idx_duplicado (posible_duplicado),
+  KEY idx_carga_id (carga_id),
   FULLTEXT KEY ft_nombre (nombre),
-  CONSTRAINT fk_pac_hosp FOREIGN KEY (hospital_id) REFERENCES hospitales(id)
+  CONSTRAINT fk_pac_hosp FOREIGN KEY (hospital_id) REFERENCES hospitales(id),
+  CONSTRAINT fk_pac_carga FOREIGN KEY (carga_id) REFERENCES carga_log(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE medicamentos (
