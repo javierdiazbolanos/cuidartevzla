@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Hospital } from '../types';
-import { Search, X, MapPin, Check, ChevronDown, Building2 } from 'lucide-react';
+import { Search, X, MapPin, Check, ChevronDown, Building2 } from '../icons';
 
 interface HospitalComboBoxProps {
   hospitales: Hospital[];

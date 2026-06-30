@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Users, Pill, WifiOff, RefreshCw, AlertCircle, Car, Building2, Home, Share2 } from 'lucide-react';
+import { Shield, Users, Pill, WifiOff, RefreshCw, AlertCircle, Car, Building2, Home, Share2 } from '../icons';
 import { isUsingMocks } from '../apiClient';
 
 interface HeaderProps {

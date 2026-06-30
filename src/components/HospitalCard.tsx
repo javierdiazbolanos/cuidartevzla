@@ -1,6 +1,6 @@
 import React from 'react';
 import { Hospital } from '../types';
-import { MapPin, Phone, Building2, Navigation } from 'lucide-react';
+import { MapPin, Phone, Building2, Navigation } from '../icons';
 
 interface HospitalCardProps {
   hospital: Hospital;

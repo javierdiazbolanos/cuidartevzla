@@ -1,6 +1,6 @@
 import React from 'react';
 import { Transporte } from '../types';
-import { Phone, MessageSquare, Car, Users, Package, MapPin, AlertCircle } from 'lucide-react';
+import { Phone, MessageSquare, Car, Users, Package, MapPin, AlertCircle } from '../icons';
 
 interface TransporteCardProps {
   key?: React.Key;

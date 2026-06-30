@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PacienteDetalle, Hospital } from '../types';
 import { getPacienteDetalle, getHospitales } from '../apiClient';
-import { X, Calendar, Building, MapPin, Share2, AlertTriangle, MessageSquare, Info, Phone } from 'lucide-react';
+import { X, Calendar, Building, MapPin, Share2, AlertTriangle, MessageSquare, Info, Phone } from '../icons';
 
 interface PacienteDetailModalProps {
   pacienteId: number;
@@ -16,37 +16,38 @@ export default function PacienteDetailModal({ pacienteId, onClose, showToast }: 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let active = true;
-    setLoading(true);
-    getPacienteDetalle(pacienteId)
-      .then(async data => {
-        if (active) {
-          setDetail(data);
-          setLoading(false);
+      let active = true;
+      setLoading(true);
+      getPacienteDetalle(pacienteId)
+        .then(async data => {
+          if (active) {
+            setDetail(data);
+            setLoading(false);
           
-          try {
-            const list = await getHospitales();
-            const found = list.find(h => h.id === data.hospital_id || h.nombre.toLowerCase().includes(data.hospital.toLowerCase()));
-            if (found && active) {
-              setHospitalInfo(found);
+            try {
+              const list = await getHospitales();
+              const found = list.find(h => h.id === data.hospital_id || 
+                (data.hospital && h.nombre && h.nombre.toLowerCase().includes(data.hospital.toLowerCase()))
+              );
+              if (found && active) {
+                setHospitalInfo(found);
+              }
+            } catch (e) {
+              console.warn('Error al buscar hospital para teléfono:', e);
             }
-          } catch (e) {
-            console.warn('Error al buscar hospital para teléfono:', e);
           }
-        }
-      })
-      .catch(err => {
-        if (active) {
-          setError(err.message || 'Error al cargar detalles del paciente');
-          setLoading(false);
-        }
-      });
+        })
+        .catch(err => {
+          if (active) {
+            setError(err.message || 'Error al cargar detalles del paciente');
+            setLoading(false);
+          }
+        });
 
-    return () => {
-      active = false;
-    };
-  }, [pacienteId]);
-
+      return () => {
+        active = false;
+      };
+    }, [pacienteId]);
   if (loading) {
     return (
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">

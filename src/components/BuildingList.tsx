@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ExternalLink, Home, AlertTriangle, X } from 'lucide-react';
+import { Search, ExternalLink, Home, AlertTriangle, X } from '../icons';
 import { Edificio } from '../types';
 import { getEdificios } from '../apiClient';
 

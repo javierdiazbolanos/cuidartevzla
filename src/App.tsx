@@ -25,8 +25,15 @@ import {
   X,
   AlertCircle,
   Car,
-  Building2
-} from 'lucide-react';
+  Building2,
+  AlertTriangle,
+  MessageSquare,
+  Info,
+  Phone,
+  Calendar,
+  Building,
+  Share2
+} from './icons';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'pacientes' | 'insumos' | 'transporte' | 'hospitales' | 'edificios'>('pacientes');
@@ -1319,15 +1326,20 @@ export default function App() {
           // Filtrado en memoria de hospitales
           const q = debouncedHospitalesQuery.toLowerCase().trim();
           const filteredHospitales = hospitales.filter(h => {
-            if (q && !h.nombre.toLowerCase().includes(q) && 
-                !(h.municipio && h.municipio.toLowerCase().includes(q)) &&
-                !(h.estado && h.estado.toLowerCase().includes(q))) {
-              return false;
-            }
-            if (hospitalesSelectedEstado && h.estado !== hospitalesSelectedEstado) {
-              return false;
-            }
-            return true;
+                // If there's a search query, check if it matches any of the fields
+                if (q) {
+                    const nameMatch = h.nombre && h.nombre.toLowerCase().includes(q);
+                    const munMatch = h.municipio && h.municipio.toLowerCase().includes(q);
+                    const estadoMatch = h.estado && h.estado.toLowerCase().includes(q);
+                    if (!nameMatch && !munMatch && !estadoMatch) {
+                        return false;
+                    }
+                }
+                // If there's a selected estado filter, check it
+                if (hospitalesSelectedEstado && h.estado !== hospitalesSelectedEstado) {
+                    return false;
+                }
+                return true;
           });
 
           // Lista de estados únicos para el filtro
