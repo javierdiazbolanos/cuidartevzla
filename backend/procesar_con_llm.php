@@ -52,6 +52,9 @@ try {
     // CONFIGURACIÓN — API KEY SERVER-SIDE (NUNCA EXPUESTA AL CLIENTE)
     // ============================================================================
     $OPENROUTER_API_KEY = getenv('OPENROUTER_API_KEY');
+    if (empty($OPENROUTER_API_KEY) && defined('OPENROUTER_API_KEY_ENV') && !empty(OPENROUTER_API_KEY_ENV)) {
+        $OPENROUTER_API_KEY = OPENROUTER_API_KEY_ENV;
+    }
         if (empty($OPENROUTER_API_KEY)) {
             // Cargar desde .env si existe
             $env_file = __DIR__ . '/.env';

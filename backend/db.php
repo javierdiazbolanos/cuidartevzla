@@ -6,11 +6,30 @@ declare(strict_types=1);
  * Terremotos de Venezuela - Junio de 2026
  */
 
-// --- CONFIGURACIÓN DE BASE DE DATOS Y SEGURIDAD (PRODUCCIÓN InfinityFree) ---
-define('DB_HOST', 'sql303.infinityfree.com');
-define('DB_NAME', 'if0_42285358_if0_42285358_cuidartevzla');
-define('DB_USER', 'if0_42285358');
-define('DB_PASS', 'P2CJJAJY8EhJcOm');
+// --- CONFIGURACIÓN DE BASE DE DATOS Y SEGURIDAD ---
+// Cargar .env si existe (producción Banahosting)
+$env_file = __DIR__ . '/.env';
+if (file_exists($env_file)) {
+    $env_lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $env = [];
+    foreach ($env_lines as $line) {
+        if (preg_match('/^([A-Z_]+)\s*=\s*(.+)$/', $line, $m)) {
+            $env[$m[1]] = trim($m[2], '"\'');
+        }
+    }
+    define('DB_HOST', $env['DB_HOST'] ?? 'localhost');
+    define('DB_NAME', $env['DB_NAME'] ?? '');
+    define('DB_USER', $env['DB_USER'] ?? '');
+    define('DB_PASS', $env['DB_PASS'] ?? '');
+    define('OPENROUTER_API_KEY_ENV', $env['OPENROUTER_API_KEY'] ?? '');
+} else {
+    // QAS - InfinityFree
+    define('DB_HOST', 'sql303.infinityfree.com');
+    define('DB_NAME', 'if0_42285358_if0_42285358_cuidartevzla');
+    define('DB_USER', 'if0_42285358');
+    define('DB_PASS', 'P2CJJAJY8EhJcOm');
+    define('OPENROUTER_API_KEY_ENV', '');
+}
 define('CODIGO_VOLUNTARIO', 'VENEZUELA_2026_DISASTER_RELIEF'); // Código maestro (legacy)
 // Códigos de voluntarios autorizados (separados por coma)
 define('CODIGOS_VOLUNTARIOS_PERMITIDOS', '15731877,4078817688,VENEZUELA_2026_DISASTER_RELIEF');
