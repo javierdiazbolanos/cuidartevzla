@@ -5,7 +5,7 @@
   
   **Buscador de Pacientes — Emergencia Sísmica Junio 2026**
   
-  [![Website](https://img.shields.io/badge/site-cuidartevzla.freedev.app-002f87?style=flat-square)](https://cuidartevzla.freedev.app)
+  [![Website](https://img.shields.io/badge/site-cuidartevzla.com-002f87?style=flat-square)](https://cuidartevzla.com)
   [![Stack](https://img.shields.io/badge/stack-React%20%2B%20PHP%20%2B%20MySQL-3b82f6?style=flat-square)](#)
   [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
   [![Records](https://img.shields.io/badge/pacientes-5%2C223-ef4444?style=flat-square)](#)
