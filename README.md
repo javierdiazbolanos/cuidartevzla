@@ -5,10 +5,10 @@
   
   **Buscador de Pacientes — Emergencia Sísmica Junio 2026**
   
-  [![Website](https://img.shields.io/badge/site-cuidartevzla.freedev.app-002f87?style=flat-square)](https://cuidartevzla.freedev.app)
+  [![Website](https://img.shields.io/badge/site-cuidartevzla.com-002f87?style=flat-square)](https://cuidartevzla.com)
   [![Stack](https://img.shields.io/badge/stack-React%20%2B%20PHP%20%2B%20MySQL-3b82f6?style=flat-square)](#)
   [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
-  [![Records](https://img.shields.io/badge/pacientes-5%2C223-ef4444?style=flat-square)](#)
+  [![Records](https://img.shields.io/badge/pacientes-5%2C677-ef4444?style=flat-square)](#)
 </div>
 
 ---
@@ -24,6 +24,8 @@ Aplicación **PWA progresiva** de búsqueda de pacientes, medicamentos y transpo
 - 🚛 **Directorio de transporte voluntario** para traslados y logística
 - 📱 **PWA offline-first** con Service Worker autocorrectivo y caché resiliente
 - 🌐 **Optimizado para Venezuela** — modo datos bajos, compresión, carga rápida en 2G/3G
+- 📄 **Carga masiva por PDF/imagen** con OCR (Tesseract.js) + LLM (OpenRouter) para digitalizar listados
+- 🔄 **Motor de deduplicación** inteligente con fuzzy matching y merge de registros
 
 ---
 
@@ -36,17 +38,20 @@ Aplicación **PWA progresiva** de búsqueda de pacientes, medicamentos y transpo
 │                         │     │                          │
 │  • Tailwind CSS 4       │     │  • PDO + MySQL           │
 │  • TypeScript           │     │  • CORS abierto           │
-│  • Service Worker       │     │  • FULLTEXT search        │
-│  • Lucide Icons         │     │  • Normalización UTF-8    │
-│  • Motion animations    │     │  • Código voluntario      │
+│  • Service Worker       │     │  • FULLTEXT search       │
+│  • OpenCV.js (OCR pre)  │     │  • Normalización UTF-8    │
+│  • Tesseract.js (OCR)    │     │  • Código voluntario      │
+│  • Lucide Icons         │     │  • Deduplicación          │
+│  • Motion animations    │     │  • LLM proxy (OpenRouter) │
 └─────────────────────────┘     └──────────┬───────────────┘
                                             │
                                  ┌──────────▼───────────────┐
                                  │   MySQL 8 (InnoDB)        │
-                                 │   sql303.infinityfree.com │
+                                 │   cuidartevzla.com:3306    │
                                  │                          │
-                                 │  • 26 hospitales          │
-                                 │  • 5,223 pacientes        │
+                                 │  • 54 hospitales          │
+                                 │  • 5,677 pacientes        │
+                                 │  • 530 edificios          │
                                  │  • FULLTEXT indexes       │
                                  └──────────────────────────┘
 ```
@@ -57,8 +62,11 @@ Aplicación **PWA progresiva** de búsqueda de pacientes, medicamentos y transpo
 |------|-----------|
 | Frontend | React 19, Vite 6, TypeScript, Tailwind CSS 4 |
 | Backend | PHP 8+, MySQL 8 (InnoDB), Apache mod_rewrite |
-| Hosting | InfinityFree (shared), FTP deploy |
+| Hosting PRD | Banahosting (`cuidartevzla.com`) — producción |
+| Hosting QAS | InfinityFree (`cuidartevzla.freedev.app`) — testing |
 | PWA | Service Worker, Web Manifest, offline cache |
+| OCR | Tesseract.js (español) + OpenCV.js (pre-procesamiento) |
+| LLM | OpenRouter API (procesamiento de OCR de baja calidad) |
 | Búsqueda | MySQL FULLTEXT + normalización de acentos (PHP + TS) |
 | Mapas | Coordenadas geográficas (lat/lng) por hospital |
 
@@ -66,12 +74,15 @@ Aplicación **PWA progresiva** de búsqueda de pacientes, medicamentos y transpo
 
 ```sql
 hospitales (id, nombre, municipio, lat, lng, telefono)
-pacientes  (id, nombre, nombre_norm, cedula, edad, sexo, procedencia,
+pacientes  (id, nombre, nombre_norm, cédula, edad, sexo, procedencia,
             hospital_id, hospital_texto, ingreso_fecha, estado,
-            posible_duplicado)
+            posible_duplicado, carga_id)
+carga_log  (id, codigo, hospital_id, total_pacientes, ip, fecha)
+edificios  (id, nombre, direccion, municipio, lat, lng)
 medicamentos (id, nombre, categoria, cantidad, hospital_id, disponible)
 transporte   (id, nombre, telefono, ciudad, vehiculo, capacidad_personas,
               capacidad_carga, disponible)
+alertas     (id, tipo, mensaje, hospital_id, created_at)
 ```
 
 ### Diseño clave
@@ -80,6 +91,23 @@ transporte   (id, nombre, telefono, ciudad, vehiculo, capacidad_personas,
 - **`nombre_norm`**: Normalización de acentos y mayúsculas (`ñ→N`, `é→E`) para búsquedas insensibles a tildes.
 - **`posible_duplicado`**: Flag automático por coincidencia de nombre normalizado entre múltiples fuentes de datos.
 - **`ingreso_fecha`**: Parseo tolerante de formatos (Excel serial, dd/mm/yy, dd-mm-yyyy).
+- **`carga_id`**: Trazabilidad de origen de datos. Cada carga masiva registra código, hospital, IP y fecha.
+
+## 📄 Pipeline OCR + LLM
+
+```
+PDF/Imagen → OpenCV.js (upscale 4× + grayscale) → Tesseract.js (OCR español)
+                                                        │
+                                                        ▼
+                                              ¿Confianza > 60%?
+                                              ├── SÍ → Insertar pacientes
+                                              └── NO → LLM (OpenRouter) procesa imagen
+```
+
+- **Pre-procesamiento**: Upscale 4× + grayscale con OpenCV.js para mejorar precisión del OCR
+- **OCR**: Tesseract.js con modelo entrenado para español
+- **Fallback LLM**: Si el OCR no detecta pacientes (confianza baja), se envía la imagen optimizada al LLM para extracción de texto
+- **Deduplicación**: Al sincronizar, el motor compara cédula exacta + fuzzy match de nombres para evitar duplicados
 
 ## 🚀 Deploy Rápido
 
@@ -93,13 +121,16 @@ npm install
 npm run build
 
 # 3. Subir a hosting compartido (FTP)
-# Contenido de dist/ → /htdocs/
-# Contenido de backend/ → /htdocs/api/
+# Contenido de dist/ → /voluntarios/      (frontend)
+# Contenido de backend/ → /api/           (backend PHP)
 
-# 4. Base de datos
+# 4. Configurar credenciales
+cp backend/.env.example backend/.env
+# Editar .env con credenciales de DB y OPENROUTER_API_KEY
+
+# 5. Base de datos
 # Ejecutar schema.sql → crear tablas
-# Ejecutar import_data.sql → datos semilla (hospitales, medicamentos, transporte)
-# Ejecutar import_patients.sql → pacientes reales
+# Importar datos de pacientes
 ```
 
 ## 🔧 Endpoints API
@@ -113,6 +144,8 @@ npm run build
 | `/api/transporte.php?ciudad=X` | GET | Transporte voluntario |
 | `/api/stats.php` | GET | Conteos (pacientes, hospitales, etc.) |
 | `/api/pacientes_lote.php` | POST | Carga batch (requiere código voluntario) |
+| `/api/sync.php?codigo=X` | POST | Deduplicación + sincronización de pacientes |
+| `/api/procesar_con_llm.php` | POST | Proxy LLM para OCR de baja calidad (OpenRouter) |
 
 ## 📱 PWA & Offline
 
