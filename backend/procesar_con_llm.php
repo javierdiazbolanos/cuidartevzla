@@ -189,7 +189,7 @@ EOT;
     $request_headers = [
         'Content-Type: application/json',
         'Authorization: Bearer ' . $OPENROUTER_API_KEY,
-        'HTTP-Referer: https://cuidartevzla.freedev.app',
+        'HTTP-Referer: https://cuidartevzla.com',
         'X-Title: CuidarteVzla OCR Backend'
     ];
 

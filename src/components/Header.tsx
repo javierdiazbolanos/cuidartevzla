@@ -17,7 +17,7 @@ export default function Header({ activeTab, setActiveTab, onRetry }: HeaderProps
     const shareData = {
       title: 'Cuídarte Venezuela - Sismo 2026',
       text: 'Busca a tus familiares y conocidos afectados por el terremoto en Venezuela. Lista oficial de pacientes, edificios afectados y centros de ayuda.',
-      url: 'https://cuidartevzla.freedev.app/',
+      url: 'https://cuidartevzla.com/',
     };
 
     try {
