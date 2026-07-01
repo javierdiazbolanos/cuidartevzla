@@ -6,6 +6,7 @@ import {
   ChevronRight,
   AlertTriangle
 } from '../icons';
+import { getApiBase } from '../apiClient';
 
 export interface EmergencyNotice {
   id: string;
@@ -63,7 +64,8 @@ async function loadAlertsFromStorage(): Promise<EmergencyNotice[]> {
 
 async function loadAlertsFromServer(): Promise<EmergencyNotice[]> {
   try {
-    const res = await fetch('/api/alertas.php');
+    const apiBase = await getApiBase();
+    const res = await fetch(`${apiBase}/alertas.php`);
     if (!res.ok) return [];
     const json = await res.json();
     if (json.ok && Array.isArray(json.data)) {
