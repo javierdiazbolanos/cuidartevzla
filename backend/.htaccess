@@ -19,7 +19,7 @@ AddDefaultCharset UTF-8
 </FilesMatch>
 
 # Permitir acceso exclusivamente a los puntos de entrada autorizados de la API
-<FilesMatch "^(pacientes|pacientes_lote|deduplicate|sync|sync2|sync_mini|hospitales|medicamentos|transporte|stats|edificios|run_homogenize_names|run_migracion_dedup|backup_db|run_dedup_existing|procesar_con_llm|test_openrouter|migrate_varchar_200|migrate_carga_log|carga_log|superuser_status|debug_headers|migrate_initial_carga|test_dedup|export_db|alertas)\.php$">
+<FilesMatch "^(pacientes|pacientes_lote|hospitales|medicamentos)\.php$">
     <IfModule mod_authz_core.c>
         Require all granted
     </IfModule>

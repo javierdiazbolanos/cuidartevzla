@@ -13,15 +13,40 @@ TRUNCATE TABLE transporte;
 
 -- 3. INSERTAR EL DIRECTORIO NACIONAL COMPLETO DE HOSPITALES
 INSERT INTO hospitales (id, nombre, municipio, lat, lng, telefono) VALUES
--- Distrito Capital / Miranda (Área Metropolitana de Caracas)
 (1, 'Hospital Universitario de Caracas (HUC)', 'Libertador', 10.489700, -66.889400, '(0212) 605-4050'),
 (2, 'Hospital Dr. José María Vargas', 'Libertador', 10.517300, -66.918900, '(0212) 862-9965'),
-(3, 'Hospital Dr. Miguel Pérez Carreño', 'Libertador', 10.482000, -66.961000, '(0212) 472-8472'),
+(3, 'Hospital Miguel Pérez Carreño', 'Libertador', 10.482000, -66.961000, '(0212) 472-8472'),
 (4, 'Hospital Dr. Domingo Luciani', 'Sucre', 10.486200, -66.815300, '(0212) 205-6501'),
+(5, 'Hospital Central de Maracay', 'Girardot', 10.252200, -67.581900, '(0243) 246-1212'),
+(6, 'Hospital Universitario Dr. Ángel Larralde', 'Valencia', 10.224100, -68.016300, '(0241) 871-6100'),
+(7, 'Hospital Universitario de Maracaibo', 'Maracaibo', 10.672800, -71.635300, '(0261) 752-0010'),
+(8, 'Hospital Universitario Ruiz y Páez', 'Heres', 8.128300, -63.541400, '(0285) 632-1515'),
+(9, 'Hospital Dr. Manuel Núñez Tovar', 'Maturín', 9.749700, -63.179400, '(0291) 641-4011'),
+(10, 'Hospital Central de San Cristóbal', 'San Cristóbal', 7.765600, -72.219800, '(0276) 347-1010'),
+(11, 'Hospital Central Universitario Antonio María Pineda', 'Iribarren', 10.075400, -69.317200, '(0251) 252-0303'),
+(12, 'Instituto Autónomo Hospital Universitario de los Andes (IAHULA)', 'Libertador', 8.599100, -71.144800, '(0274) 240-1111'),
+(13, 'Hospital Universitario Dr. Luis Razetti (Barcelona)', 'Simón Bolívar', 10.134200, -64.685300, '(0281) 263-4207'),
+(14, 'Hospital Dr. Alfredo Van Grieken', 'Miranda', 11.411400, -69.673600, '(0268) 252-1112'),
+(15, 'Hospital Universitario Antonio Patricio de Alcalá', 'Sucre', 10.453300, -64.182400, '(0293) 431-2020'),
+(16, 'Hospital Dr. Luis Ortega', 'Mariño', 10.957500, -63.858300, '(0295) 261-1224'),
+(17, 'Hospital Dr. Miguel Óraá', 'Guanare', 9.041400, -69.748300, '(0257) 251-1100'),
+(18, 'Hospital Universitario Dr. Pedro Emilio Carrillo', 'Valera', 9.317800, -70.603300, '(0271) 221-5050'),
+(19, 'Hospital Dr. Luis Razetti (Barinas)', 'Barinas', 8.622500, -70.211900, '(0273) 541-1111'),
+(20, 'Hospital Dr. José María Vargas (La Guaira)', 'Vargas', 10.598300, -66.932200, '(0212) 227-1468'),
+(21, 'Hospital Dr. Israel Ranuárez Balza', 'Juan Germán Roscio', 9.911400, -67.358100, '(0246) 431-1522'),
+(22, 'Hospital Dr. Egor Nucete', 'Ezequiel Zamora', 9.653300, -68.583300, '(0258) 251-3011'),
+(23, 'Hospital Dr. Pablo Acosta Ortiz', 'San Fernando', 7.893300, -67.472200, '(0247) 341-0811'),
+(24, 'Hospital Central Dr. Plácido Daniel Rodríguez Rivero', 'San Felipe', 10.339200, -68.742200, '(0254) 231-1055'),
+(25, 'Hospital Dr. José Gregorio Hernández (Puerto Ayacucho)', 'Atures', 5.663900, -67.625600, '(0248) 521-0111'),
+(26, 'Hospital Dr. Luis Razetti (Tucupita)', 'Tucupita', 9.060300, -62.051400, '(0287) 721-1212'),
+(27, 'Ciudad Hospitalaria Dr. Enrique Tejera (CHET)', 'Valencia', 10.169200, -68.012500, '(0241) 831-2022'),
+(28, 'Hospital General Dr. Felipe Guevara Rojas', 'Simón Rodríguez', 8.883300, -64.244400, '(0283) 235-5022'),
+(29, 'Hospital Dr. Rafael Calles Sierra', 'Carirubana', 11.697500, -70.183300, '(0269) 247-1122'),
+(30, 'Hospital Dr. Raúl Leoni (Guaiparo)', 'Caroní', 8.351400, -62.651400, '(0286) 931-1122'),
 (31, 'Hospital Dr. Victorino Santaella', 'Guaicaipuro', 10.313900, -67.040300, '(0212) 364-0000'),
 (32, 'Hospital Dr. de Niños J.M. de los Ríos', 'Libertador', 10.510300, -66.903100, '(0212) 574-3511'),
-(33, 'Clínica CCCT', 'Chacao', 10.491200, -66.837500, '(0212) 959-6444'),
-(34, 'Clínica El Ávila', 'Chacao', 10.496800, -66.845000, '(0212) 276-1111'),
+(33, 'Clinica CCCT', 'Chacao', 10.491200, -66.837500, '(0212) 959-6444'),
+(34, 'Clinica El Ávila', 'Chacao', 10.496800, -66.845000, '(0212) 276-1111'),
 (35, 'Cruz Roja Venezolana — Sede La Candelaria (Caracas)', 'Libertador', 10.504200, -66.900100, '(0212) 571-4380'),
 (36, 'Grupo Médico Santa Paula', 'Baruta', 10.463200, -66.832200, '(0212) 917-6200'),
 (37, 'Hospital Ana Francisca Pérez de León II (Petare)', 'Sucre', 10.479500, -66.805400, '(0212) 256-8448'),
@@ -31,81 +56,18 @@ INSERT INTO hospitales (id, nombre, municipio, lat, lng, telefono) VALUES
 (41, 'Hospital Periférico de Catia (Dr. Ricardo Baquero González)', 'Libertador', 10.528400, -66.938200, '(0212) 870-2266'),
 (42, 'Hospital Periférico de Coche', 'Libertador', 10.467400, -66.931200, '(0212) 681-1133'),
 (43, 'Materno Infantil del Valle (Hugo Chávez Frías)', 'Libertador', 10.457800, -66.892400, '(0212) 671-5902'),
-(44, 'Policlínica La Arboleda', 'Libertador', 10.512400, -66.901500, '(0212) 550-1811'),
-(45, 'Policlínica Santiago de León', 'Libertador', 10.490500, -66.868200, '(0212) 762-9025'),
-(46, 'Policlínica David Lobo', 'Libertador', 10.505000, -66.908000, '(0212) 541-5465'),
-(47, 'Policlínica Las Mercedes', 'Baruta', 10.481500, -66.861200, '(0212) 993-2323'),
-(48, 'Sede del Sebin (La Guaira)', 'Vargas', 10.592500, -66.941000, '(0212) 541-7656'),
-(49, 'IVSS — Hospital General de Misiones Nuevas Generaciones Hugo Chávez', 'Libertador', 10.495000, -66.911000, '(0212) 801-1000'),
-(50, 'Clínica Canes', 'Libertador', 10.506400, -66.930900, '(0212) 471-4848'),
-
--- La Guaira
-(20, 'Hospital Dr. José María Vargas — IVSS La Guaira', 'Vargas', 10.598300, -66.932200, '(0212) 227-1468'),
-
--- Aragua / Carabobo
-(5, 'Hospital Central de Maracay', 'Girardot', 10.252200, -67.581900, NULL),
-(6, 'Hospital Universitario Dr. Ángel Larralde', 'Valencia', 10.224100, -68.016300, NULL),
-(27, 'Ciudad Hospitalaria Dr. Enrique Tejera (CHET)', 'Valencia', 10.169200, -68.012500, NULL),
-
--- Zulia
-(7, 'Hospital Universitario de Maracaibo', 'Maracaibo', 10.672800, -71.635300, NULL),
-
--- Bolívar
-(8, 'Hospital Universitario Ruiz y Páez', 'Heres', 8.128300, -63.541400, NULL),
-(30, 'Hospital Dr. Raúl Leoni (Guaiparo)', 'Caroní', 8.351400, -62.651400, NULL),
-
--- Monagas
-(9, 'Hospital Dr. Manuel Núñez Tovar', 'Maturín', 9.749700, -63.179400, NULL),
-
--- Táchira
-(10, 'Hospital Central de San Cristóbal', 'San Cristóbal', 7.765600, -72.219800, NULL),
-
--- Lara
-(11, 'Hospital Central Universitario Antonio María Pineda', 'Iribarren', 10.075400, -69.317200, NULL),
-
--- Mérida
-(12, 'Instituto Autónomo Hospital Universitario de los Andes (IAHULA)', 'Libertador', 8.599100, -71.144800, NULL),
-
--- Anzoátegui
-(13, 'Hospital Universitario Dr. Luis Razetti (Barcelona)', 'Simón Bolívar', 10.134200, -64.685300, NULL),
-(28, 'Hospital General Dr. Felipe Guevara Rojas', 'Simón Rodríguez', 8.883300, -64.244400, NULL),
-
--- Falcón
-(14, 'Hospital Dr. Alfredo Van Grieken', 'Miranda', 11.411400, -69.673600, NULL),
-(29, 'Hospital Dr. Rafael Calles Sierra', 'Carirubana', 11.697500, -70.183300, NULL),
-
--- Sucre
-(15, 'Hospital Universitario Antonio Patricio de Alcalá', 'Sucre', 10.453300, -64.182400, NULL),
-
--- Nueva Esparta
-(16, 'Hospital Dr. Luis Ortega', 'Mariño', 10.957500, -63.858300, NULL),
-
--- Portuguesa
-(17, 'Hospital Dr. Miguel Óraá', 'Guanare', 9.041400, -69.748300, NULL),
-
--- Trujillo
-(18, 'Hospital Universitario Dr. Pedro Emilio Carrillo', 'Valera', 9.317800, -70.603300, NULL),
-
--- Barinas
-(19, 'Hospital Dr. Luis Razetti (Barinas)', 'Barinas', 8.622500, -70.211900, NULL),
-
--- Guárico
-(21, 'Hospital Dr. Israel Ranuárez Balza', 'Juan Germán Roscio', 9.911400, -67.358100, NULL),
-
--- Cojedes
-(22, 'Hospital Dr. Egor Nucete', 'Ezequiel Zamora', 9.653300, -68.583300, NULL),
-
--- Apure
-(23, 'Hospital Dr. Pablo Acosta Ortiz', 'San Fernando', 7.893300, -67.472200, NULL),
-
--- Yaracuy
-(24, 'Hospital Central Dr. Plácido Daniel Rodríguez Rivero', 'San Felipe', 10.339200, -68.742200, NULL),
-
--- Amazonas
-(25, 'Hospital Dr. José Gregorio Hernández (Puerto Ayacucho)', 'Atures', 5.663900, -67.625600, NULL),
-
--- Delta Amacuro
-(26, 'Hospital Dr. Luis Razetti (Tucupita)', 'Tucupita', 9.060300, -62.051400, NULL);
+(44, 'Policlinica La Arboleda', 'Libertador', 10.512400, -66.901500, '(0212) 550-1811'),
+(45, 'Policlinica Santiago de León', 'Libertador', 10.490500, -66.868200, '(0212) 762-9025'),
+(46, 'Policlinica David Lobo', 'Libertador', 10.505000, -66.908000, '(0212) 541-5465'),
+(47, 'Policlinica Las Mercedes', 'Baruta', 10.481500, -66.861200, '(0212) 993-2323'),
+(48, 'Sede del Sebin (La Guaira)', 'Vargas', 10.592500, -66.941000, '(0212) 506-4444'),
+(49, 'Hospital General de Misiones Nuevas Generaciones Hugo Chávez (IVSS)', 'Libertador', 10.495000, -66.911000, '(0212) 801-1000')
+ON DUPLICATE KEY UPDATE 
+  nombre = VALUES(nombre), 
+  municipio = VALUES(municipio), 
+  lat = VALUES(lat), 
+  lng = VALUES(lng),
+  telefono = VALUES(telefono);
 
 -- 4. INSERTAR LISTADO COMPLETO DE PACIENTES
 INSERT INTO pacientes (id, nombre, nombre_norm, cedula, edad, sexo, procedencia, hospital_id, hospital_texto, ingreso_fecha, ingreso_detalle, estado, posible_duplicado) VALUES

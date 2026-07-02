@@ -32,3 +32,7 @@ export { ChevronDown } from 'lucide-react';
 export { Package } from 'lucide-react';
 export { Navigation } from 'lucide-react';
 export { Eye } from 'lucide-react';
+export { LogOut } from 'lucide-react';
+export { User } from 'lucide-react';
+export { Key } from 'lucide-react';
+export { Power } from 'lucide-react';

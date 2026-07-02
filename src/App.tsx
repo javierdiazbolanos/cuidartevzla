@@ -127,6 +127,38 @@ export default function App() {
     'Otro'
   ];
 
+  // Estado y manejador para Compartir Acceso (FAB)
+  const [shared, setShared] = useState<boolean>(false);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'Cuídarte Venezuela - Sismo 2026',
+      text: 'Busca a tus familiares y conocidos afectados por el sismo en Venezuela. Lista de pacientes, edificios afectados y centros de salud.',
+      url: window.location.origin || 'https://cuidartevzla.com/',
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        triggerToast('¡Enlace de acceso compartido con éxito!');
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        setShared(true);
+        triggerToast('¡Enlace de acceso copiado al portapapeles!');
+        setTimeout(() => setShared(false), 3000);
+      }
+    } catch {
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        setShared(true);
+        triggerToast('¡Enlace de acceso copiado!');
+        setTimeout(() => setShared(false), 3000);
+      } catch {
+        // no-op
+      }
+    }
+  };
+
   // Helper para mostrar Toasts rápidos
   const triggerToast = (msg: string) => {
     setToastMsg(msg);
@@ -1326,9 +1358,10 @@ export default function App() {
           // Filtrado en memoria de hospitales
           const q = debouncedHospitalesQuery.toLowerCase().trim();
           const filteredHospitales = hospitales.filter(h => {
+                const hNombre = h.nombre || (h as any).text || '';
                 // If there's a search query, check if it matches any of the fields
                 if (q) {
-                    const nameMatch = h.nombre && h.nombre.toLowerCase().includes(q);
+                    const nameMatch = hNombre.toLowerCase().includes(q);
                     const munMatch = h.municipio && h.municipio.toLowerCase().includes(q);
                     const estadoMatch = h.estado && h.estado.toLowerCase().includes(q);
                     if (!nameMatch && !munMatch && !estadoMatch) {
@@ -1612,6 +1645,23 @@ export default function App() {
           <span className="flex-1">{toastMsg}</span>
         </div>
       )}
+
+      {/* ==================================
+          BOTÓN FAB DE COMPARTIR RESPONSIVO
+         ================================== */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <button
+          id="share-fab"
+          onClick={handleShare}
+          className="flex items-center justify-center gap-2 w-12 h-12 sm:w-auto sm:px-5 sm:h-12 rounded-full bg-sky-600 hover:bg-sky-500 text-white shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 cursor-pointer border border-sky-500/20"
+          title="Compartir Acceso"
+        >
+          <Share2 className="w-5 h-5 shrink-0" />
+          <span className="hidden sm:inline text-sm font-bold tracking-tight whitespace-nowrap">
+            Compartir
+          </span>
+        </button>
+      </div>
 
     </div>
   );

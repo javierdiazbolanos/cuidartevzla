@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import {
-  PhoneCall,
+import { 
+  PhoneCall, 
   X,
   ChevronLeft,
-  ChevronRight,
-  AlertTriangle
-} from '../icons';
-import { getApiBase } from '../apiClient';
+  ChevronRight
+} from 'lucide-react';
 
 export interface EmergencyNotice {
   id: string;
@@ -21,169 +19,190 @@ export interface EmergencyContact {
   description: string;
 }
 
+// Valores por defecto orientados al contexto de Venezuela con un tono pana amigable y tuteo
 const DEFAULT_NOTICES: EmergencyNotice[] = [
-  { id: '1', text: '⚠️ SOS Telemedicina UCV (Línea Gratuita de Emergencias Médicas): Llame al (0212) 605-1555 si se siente mal.', type: 'alert' },
-  { id: '2', text: '📢 ¡Buenas noticias! Encontraron insulina y analgésicos en farmacias comunitarias autorizadas.', type: 'success' },
+  { id: '1', text: '⚠️ SOS Telemedicina UCV (Línea Gratuita de Emergencias Médicas): Llama al (0212) 605-1555 si te sientes mal.', type: 'alert' },
+  { id: '2', text: '📢 ¡Hay buenas noticias! Encontraron Insulina y Analgésicos en farmacias comunitarias autorizadas.', type: 'success' },
+  { id: '3', text: '💡 Consejo: Si estás navegando con 3G o tienes pocos megas, activa ya mismo el "Modo de Datos Bajos" abajo.', type: 'info' },
+  { id: '4', text: '🏥 ¡Tranquilo! Guardamos todos los hospitales en tu teléfono para que los consultes al instante aunque no tengas saldo.', type: 'success' }
 ];
 
-const LS_KEY = 'cuidarte_alertas';
+const DEFAULT_CONTACTS: EmergencyContact[] = [
+  { id: 'c1', name: 'SOS Telemedicina (UCV)', number: '0212-6051555', description: 'Te atienden doctores gratis por teléfono.' },
+  { id: 'c2', name: 'Cruz Roja Venezolana', number: '0212-5782187', description: 'Primeros auxilios y reportes de medicinas.' },
+  { id: 'c3', name: 'Bomberos de Caracas', number: '0212-5422222', description: 'Emergencias en la capital y zona metropolitana.' },
+  { id: 'c4', name: 'Emergencias Nacionales (VEN 911)', number: '911', description: 'Central de llamadas de seguridad del país.' }
+];
 
-interface Alerta {
-  id: string;
-  texto: string;
-  severidad: string;
-  timestamp: string;
-  voluntario: string;
+interface EmergencyAlertsProps {
+  onTriggerToast: (msg: string) => void;
 }
 
-function mapAlertaToNotice(a: Alerta): EmergencyNotice {
-  const { severidad } = a;
-  let type: EmergencyNotice['type'] = 'alert';
-  if (severidad === 'media') type = 'info';
-  else if (severidad === 'baja') type = 'success';
-  // else remains alert
-  return {
-    id: a.id,
-    text: a.texto,
-    type,
-  };
-}
-
-async function loadAlertsFromStorage(): Promise<EmergencyNotice[]> {
-  try {
-    const saved = localStorage.getItem(LS_KEY);
-    if (saved) {
-      const alertas: Alerta[] = JSON.parse(saved);
-      return alertas.map(mapAlertaToNotice);
-    }
-  } catch (e) {
-    console.warn('Failed to parse alerts from localStorage', e);
-  }
-  return [];
-}
-
-async function loadAlertsFromServer(): Promise<EmergencyNotice[]> {
-  try {
-    const apiBase = await getApiBase();
-    const res = await fetch(`${apiBase}/alertas.php`);
-    if (!res.ok) return [];
-    const json = await res.json();
-    if (json.ok && Array.isArray(json.data)) {
-      const alertas: Alerta[] = json.data.map((a: any) => ({
-        id: String(a.id),
-        texto: a.texto,
-        severidad: a.severidad || 'media',
-        timestamp: a.created_at,
-        voluntario: a.voluntario || 'Admin',
-      }));
-      return alertas.map(mapAlertaToNotice);
-    }
-  } catch (e) {
-    console.warn('Failed to fetch alerts from server', e);
-  }
-  return [];
-}
-
-export default function EmergencyAlerts({ onTriggerToast }: { onTriggerToast: (msg: string) => void }) {
+export default function EmergencyAlerts({ onTriggerToast }: EmergencyAlertsProps) {
   const [notices, setNotices] = useState<EmergencyNotice[]>([]);
-  const [currentNoticeIndex, setCurrentNoticeIndex] = useState(0);
+  const [contacts, setContacts] = useState<EmergencyContact[]>([]);
+  
+  // Interfaz de navegación / colapsos
   const [showDirectory, setShowDirectory] = useState(false);
+  const [currentNoticeIndex, setCurrentNoticeIndex] = useState(0);
 
-  // Load alerts from localStorage on mount and listen for storage changes
-  useEffect(() => {
-    const loadAndSet = async () => {
-      let alertas = await loadAlertsFromStorage();
-      if (alertas.length === 0) {
-        alertas = await loadAlertsFromServer();
-      }
-      if (alertas.length === 0) {
-        alertas = DEFAULT_NOTICES;
-      }
-      setNotices(alertas);
-      setCurrentNoticeIndex(0);
-    };
-
-    loadAndSet();
-
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === LS_KEY && e.newValue !== null) {
-        (async () => {
-          const stored = await loadAlertsFromStorage();
-          if (stored.length > 0) {
-            setNotices(stored);
-            setCurrentNoticeIndex(0);
-          }
-        })();
-      }
-    };
-
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
-
-  const handlePrev = () => {
-    if (notices.length === 0) return;
-    setCurrentNoticeIndex((prev) => (prev === 0 ? notices.length - 1 : prev - 1));
-  };
+  // Soporte para gestos de deslizamiento (Swipe) con el dedo en móviles (sin librerías pesadas)
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const handleNext = () => {
-    if (notices.length === 0) return;
-    setCurrentNoticeIndex((prev) => (prev === notices.length - 1 ? 0 : prev + 1));
+    if (notices.length <= 1) return;
+    setCurrentNoticeIndex(prev => (prev + 1) % notices.length);
   };
 
-  const currentNotice = notices[currentNoticeIndex];
+  const handlePrev = () => {
+    if (notices.length <= 1) return;
+    setCurrentNoticeIndex(prev => (prev - 1 + notices.length) % notices.length);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diffX = touchStartX - touchEndX;
+
+    // Umbral de 50px para detectar deslizamiento
+    if (diffX > 50) {
+      handleNext();
+      onTriggerToast('Mostrando siguiente aviso');
+    } else if (diffX < -50) {
+      handlePrev();
+      onTriggerToast('Mostrando aviso anterior');
+    }
+    setTouchStartX(null);
+  };
+
+  // 1. Cargar datos iniciales desde localStorage o Defaults para resiliencia offline completa
+  useEffect(() => {
+    let savedNotices = DEFAULT_NOTICES;
+    let savedContacts = DEFAULT_CONTACTS;
+    
+    if (typeof window !== 'undefined') {
+      try {
+        const localN = localStorage.getItem('cuidarte_notices');
+        if (localN) savedNotices = JSON.parse(localN);
+        
+        const localC = localStorage.getItem('cuidarte_contacts');
+        if (localC) savedContacts = JSON.parse(localC);
+      } catch (e) {
+        console.warn('Error leyendo avisos locales:', e);
+      }
+    }
+    
+    setNotices(savedNotices);
+    setContacts(savedContacts);
+  }, []);
+
+  // 2. Rotación automática del Ticker cada 6 segundos, se reinicia cada vez que cambia el índice o hay interacción manual
+  useEffect(() => {
+    if (notices.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentNoticeIndex(prev => (prev + 1) % notices.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [notices, currentNoticeIndex]);
+
+  const activeNotice = notices[currentNoticeIndex];
 
   return (
-    <div>
-      {/* 1. TICKER DE ALERTAS DE EMERGENCIA */}
-      <div className="w-full space-y-3">
-        <div className="w-full bg-rose-50/90 border border-rose-200 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex items-center space-x-3 min-w-0 flex-1">
-            <div className="relative flex h-3 w-3 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-rose-500"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-600"></span>
-            </div>
-            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-            <div className="min-w-0 flex-1">
-              {currentNotice ? (
-                <p className="text-xs sm:text-sm font-semibold text-rose-900 leading-snug">
-                  {currentNotice.text}
-                  <span className="text-[10px] font-mono font-normal">({currentNotice.id})</span>
-                </p>
-              ) : (
-                <p className="text-xs sm:text-sm font-semibold text-slate-500">No hay alertas operacionales activas en este momento.</p>
-              )}
+    <div id="emergency-alerts-root" className="w-full space-y-3">
+      
+      {/* 1. TICKER AUTOMÁTICO DE NOTICIAS DE EMERGENCIA CON SWIPE INTEGRADO */}
+      {notices.length > 0 && activeNotice && (
+        <div 
+          id="emergency-ticker-banner"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className={`relative overflow-hidden rounded-2xl border px-3 sm:px-4 py-3 shadow-sm transition-all duration-300 flex items-center justify-between gap-2.5 sm:gap-3 ${
+            activeNotice.type === 'alert' 
+              ? 'bg-rose-50/90 border-rose-200 text-rose-950' 
+              : activeNotice.type === 'success'
+                ? 'bg-sky-50/90 border-sky-200 text-sky-950'
+                : 'bg-amber-50/90 border-amber-200 text-amber-950'
+          }`}
+          title="Desliza horizontalmente para ver más avisos"
+        >
+          {/* Luz intermitente de alerta */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <span className="relative flex h-3 w-3 shrink-0">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                activeNotice.type === 'alert' 
+                  ? 'bg-rose-500' 
+                  : activeNotice.type === 'success'
+                    ? 'bg-sky-500'
+                    : 'bg-amber-500'
+              }`} />
+              <span className={`relative inline-flex rounded-full h-3 w-3 ${
+                activeNotice.type === 'alert' 
+                  ? 'bg-rose-600' 
+                  : activeNotice.type === 'success'
+                    ? 'bg-sky-600'
+                    : 'bg-amber-600'
+              }`} />
+            </span>
+            
+            {/* Mensaje de la noticia */}
+            <div className="flex-1 text-xs sm:text-sm font-bold leading-snug tracking-tight">
+              <p className="line-clamp-2 sm:line-clamp-1">{activeNotice.text}</p>
             </div>
           </div>
 
-          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-            {notices.length > 0 && (
-              <div className="bg-white border border-rose-100 rounded-xl px-2 py-1 flex items-center space-x-3 shadow-xs font-mono text-xs text-rose-900 select-none">
+          {/* Botones de acción del Ticker y flechas de navegación táctiles */}
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-1">
+            {notices.length > 1 && (
+              <div className="flex items-center bg-white/75 border border-slate-200/50 rounded-xl p-0.5 shadow-xs">
+                {/* Flecha Izquierda */}
                 <button
-                  type="button"
-                  onClick={handlePrev}
-                  className="hover:bg-rose-50 p-1 rounded-lg transition-colors text-rose-600 hover:text-rose-900 cursor-pointer"
-                  title="Anterior"
+                  id="btn-prev-notice"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePrev();
+                  }}
+                  className="p-1 rounded-lg hover:bg-slate-100 text-slate-700 active:scale-90 transition-all cursor-pointer flex items-center justify-center"
+                  style={{ minWidth: '36px', minHeight: '36px' }}
+                  title="Mensaje anterior"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="font-bold tracking-tight">{currentNoticeIndex + 1} / {notices.length}</span>
+
+                {/* Contador */}
+                <span className="text-[10px] font-mono font-bold px-1 min-w-[28px] text-center text-slate-800 select-none">
+                  {currentNoticeIndex + 1}/{notices.length}
+                </span>
+
+                {/* Flecha Derecha */}
                 <button
-                  type="button"
-                  onClick={handleNext}
-                  className="hover:bg-rose-50 p-1 rounded-lg transition-colors text-rose-600 hover:text-rose-900 cursor-pointer"
-                  title="Siguiente"
+                  id="btn-next-notice"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNext();
+                  }}
+                  className="p-1 rounded-lg hover:bg-slate-100 text-slate-700 active:scale-90 transition-all cursor-pointer flex items-center justify-center"
+                  style={{ minWidth: '36px', minHeight: '36px' }}
+                  title="Siguiente mensaje"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             )}
-
+            
+            {/* Botón para abrir directorio rápido */}
             <button
-              type="button"
-              onClick={() => { setShowDirectory(!showDirectory); }}
               id="btn-toggle-quick-directory"
-              className="p-2 rounded-xl hover:bg-white/60 cursor-pointer transition-colors text-xs font-bold flex items-center justify-center gap-1 border-transparent"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDirectory(!showDirectory);
+              }}
+              className={`p-2 rounded-xl hover:bg-white/60 cursor-pointer transition-colors text-xs font-bold flex items-center justify-center gap-1 border border-transparent ${
+                showDirectory ? 'bg-white/80 border-slate-200 text-sky-800' : 'text-slate-600'
+              }`}
               style={{ minHeight: '38px', minWidth: '38px' }}
               title="Directorio de emergencia"
             >
@@ -192,60 +211,56 @@ export default function EmergencyAlerts({ onTriggerToast }: { onTriggerToast: (m
             </button>
           </div>
         </div>
+      )}
 
-        {/* 2. DIRECTORIO TELEFÓNICO DE EMERGENCIA (COLAPSIBLE) */}
-        {showDirectory && (
-          <div
-            id="emergency-directory-panel"
-            className="bg-white border border-slate-200 rounded-2xl p-4 shadow-md animate-in fade-in slide-in-from-top-1 duration-200 space-y-3"
-          >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h3 className="text-sm font-extrabold text-slate-950 flex items-center gap-2">
-                <PhoneCall className="w-4 h-4 text-sky-600 animate-pulse" />
-                Números de Emergencia para la Comunidad
-              </h3>
-              <button
-                onClick={() => setShowDirectory(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {[
-                { id: '1', name: 'SAMU', number: '171', description: 'Urgencias médicas nacionales' },
-                { id: '2', name: 'Protección Civil', number: '0800-PROTEC (0800-776832)', description: 'Respuesta a desastres y evacuaciones' },
-                { id: '3', name: 'Cruz Verde', number: '0800-CRUZVE (0800-278983)', description: 'Asistencia médica prehospitalaria' },
-                { id: '4', name: 'Cruz Roja Venezolana', number: '0800-CRUZRO (0800-278976)', description: 'Ayuda humanitaria y primeros auxilios' },
-                { id: '5', name: 'Bomberos de Caracas', number: '0212-504-1212', description: 'Emergencias de incendio y rescate' },
-                { id: '6', name: 'Guardia Nacional Bolivariana', number: '0212-508-3131', description: 'Orden público y apoyo en desastres' },
-                { id: '7', name: 'INAMHI', number: '0212-504-1313', description: 'Alertas meteorológicas y sísmicas' },
-                { id: '8', name: 'Protección Animal', number: '0212-555-1212', description: 'Rescate y cuidado de animales en peligro' },
-              ].map((c) => (
-                <div key={c.id} className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex items-center justify-between gap-3 hover:border-sky-100 transition-colors">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-extrabold text-slate-900 truncate">{c.name}</p>
-                    <p className="text-[11px] text-slate-500 leading-tight mt-0.5">{c.description}</p>
-                  </div>
-                  <a
-                    href={`tel:${c.number.replace(/\s+/g, '')}`}
-                    className="bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shrink-0 shadow-sm shadow-sky-100 active:scale-95 transition-all cursor-pointer"
-                    style={{ minHeight: '38px' }}
-                  >
-                    <PhoneCall className="w-3.5 h-3.5" />
-                    <span>{c.number}</span>
-                  </a>
-                </div>
-              ))}
-            </div>
-
-            <div className="text-[10px] font-mono text-slate-400 text-center bg-slate-50 py-1.5 px-2 rounded-lg leading-relaxed">
-              💡 <strong>Un dato:</strong> Si está en su celular, toque el número para llamarlo directamente.
-            </div>
+      {/* 2. DIRECTORIO TELEFÓNICO DE EMERGENCIA (COLAPSIBLE) */}
+      {showDirectory && (
+        <div 
+          id="emergency-directory-panel"
+          className="bg-white border border-slate-200 rounded-2xl p-4 shadow-md animate-in fade-in slide-in-from-top-1 duration-200 space-y-3"
+        >
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <h3 className="text-sm font-extrabold text-slate-950 flex items-center gap-2">
+              <PhoneCall className="w-4 h-4 text-sky-600 animate-pulse" />
+              Números de Emergencia para la Comunidad
+            </h3>
+            <button
+              onClick={() => setShowDirectory(false)}
+              className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-        )}
-      </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {contacts.map(c => (
+              <div 
+                key={c.id} 
+                className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex items-center justify-between gap-3 hover:border-sky-100 transition-colors"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-extrabold text-slate-900 truncate">{c.name}</p>
+                  <p className="text-[11px] text-slate-500 leading-tight mt-0.5">{c.description}</p>
+                </div>
+                
+                {/* Enlace tel: directo que funciona en teléfonos celulares */}
+                <a
+                  href={`tel:${c.number.replace(/\s+/g, '')}`}
+                  className="bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shrink-0 shadow-sm shadow-sky-100 active:scale-95 transition-all cursor-pointer"
+                  style={{ minHeight: '38px' }}
+                >
+                  <PhoneCall className="w-3.5 h-3.5" />
+                  <span>{c.number}</span>
+                </a>
+              </div>
+            ))}
+          </div>
+          
+          <div className="text-[10px] font-mono text-slate-400 text-center bg-slate-50 py-1.5 px-2 rounded-lg leading-relaxed">
+            💡 <strong>Un dato:</strong> Si estás en tu celular, dale un toque al número para llamarlos de una vez.
+          </div>
+        </div>
+      )}
     </div>
   );
 }

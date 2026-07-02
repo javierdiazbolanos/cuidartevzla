@@ -1,6 +1,6 @@
 import React from 'react';
 import { Paciente } from '../types';
-import { Calendar, Building, HelpCircle, AlertTriangle, ChevronRight } from '../icons';
+import { Calendar, Building, HelpCircle, AlertTriangle, ChevronRight } from 'lucide-react';
 
 interface PacienteCardProps {
   key?: React.Key;

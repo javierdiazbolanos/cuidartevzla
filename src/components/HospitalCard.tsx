@@ -1,12 +1,15 @@
 import React from 'react';
 import { Hospital } from '../types';
-import { MapPin, Phone, Building2, Navigation } from '../icons';
+import { MapPin, Phone, Building2 } from '../icons';
 
 interface HospitalCardProps {
   hospital: Hospital;
+  key?: React.Key;
 }
 
 export default function HospitalCard({ hospital }: HospitalCardProps) {
+  const nombre = hospital.nombre || (hospital as any).text || 'Centro de Salud';
+
   // Formatear teléfono para enlace tel: (quitar paréntesis, espacios, guiones)
   const rawPhone = hospital.telefono
     ? hospital.telefono.replace(/[\(\)\s\-\.]/g, '')
@@ -24,6 +27,8 @@ export default function HospitalCard({ hospital }: HospitalCardProps) {
     .filter(Boolean)
     .join(', ');
 
+  const nombreLower = nombre.toLowerCase();
+
   return (
     <div
       id={`hospital-card-${hospital.id}`}
@@ -35,7 +40,7 @@ export default function HospitalCard({ hospital }: HospitalCardProps) {
         {/* Nombre del hospital */}
         <h3 className="text-base font-bold text-slate-900 leading-tight flex items-start gap-2">
           <Building2 className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
-          <span className="truncate">{hospital.nombre}</span>
+          <span className="truncate">{nombre}</span>
         </h3>
 
         {/* Ubicación */}
@@ -43,22 +48,6 @@ export default function HospitalCard({ hospital }: HospitalCardProps) {
           <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium ml-7">
             <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <span className="truncate">{ubicacion}</span>
-          </div>
-        )}
-
-        {/* Navegar (Google Maps) */}
-        {hospital.lat && hospital.lng && (
-          <div className="ml-7">
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${hospital.lat},${hospital.lng}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 hover:underline transition-colors"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Navigation className="w-3 h-3" />
-              Cómo llegar
-            </a>
           </div>
         )}
       </div>
@@ -84,11 +73,11 @@ export default function HospitalCard({ hospital }: HospitalCardProps) {
 
         {/* Tipo de centro */}
         <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg">
-          {hospital.nombre.toLowerCase().includes('hospital') ? '🏥 Hospital' :
-           hospital.nombre.toLowerCase().includes('clínica') || hospital.nombre.toLowerCase().includes('clinica') ? '🏨 Clínica' :
-           hospital.nombre.toLowerCase().includes('policlínica') || hospital.nombre.toLowerCase().includes('policlinica') ? '🏨 Policlínica' :
-           hospital.nombre.toLowerCase().includes('cruz roja') ? '🚑 Emergencias' :
-           hospital.nombre.toLowerCase().includes('ivss') || hospital.nombre.toLowerCase().includes('seguro') ? '🏥 Público' :
+          {nombreLower.includes('hospital') ? '🏥 Hospital' :
+           nombreLower.includes('clínica') || nombreLower.includes('clinica') ? '🏨 Clínica' :
+           nombreLower.includes('policlínica') || nombreLower.includes('policlinica') ? '🏨 Policlínica' :
+           nombreLower.includes('cruz roja') ? '🚑 Emergencias' :
+           nombreLower.includes('ivss') || nombreLower.includes('seguro') ? '🏥 Público' :
            '🏥 Centro de Salud'}
         </span>
       </div>

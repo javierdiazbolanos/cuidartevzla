@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Medicamento } from '../types';
 import { getMedicamentoDetalle } from '../apiClient';
-import { X, Building, Layers, Heart, Info, AlertTriangle, HelpCircle } from '../icons';
+import { X, Building, Layers, Heart, Info, AlertTriangle, HelpCircle } from 'lucide-react';
 
 interface MedicamentoDetailModalProps {
   medicamentoId: number;

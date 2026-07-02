@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PacienteDetalle, Hospital } from '../types';
 import { getPacienteDetalle, getHospitales } from '../apiClient';
-import { X, Calendar, Building, MapPin, Share2, AlertTriangle, MessageSquare, Info, Phone } from '../icons';
+import { X, Calendar, Building, MapPin, Share2, AlertTriangle, MessageSquare, Info, Phone } from 'lucide-react';
 
 interface PacienteDetailModalProps {
   pacienteId: number;
@@ -16,38 +16,37 @@ export default function PacienteDetailModal({ pacienteId, onClose, showToast }: 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-      let active = true;
-      setLoading(true);
-      getPacienteDetalle(pacienteId)
-        .then(async data => {
-          if (active) {
-            setDetail(data);
-            setLoading(false);
+    let active = true;
+    setLoading(true);
+    getPacienteDetalle(pacienteId)
+      .then(async data => {
+        if (active) {
+          setDetail(data);
+          setLoading(false);
           
-            try {
-              const list = await getHospitales();
-              const found = list.find(h => h.id === data.hospital_id || 
-                (data.hospital && h.nombre && h.nombre.toLowerCase().includes(data.hospital.toLowerCase()))
-              );
-              if (found && active) {
-                setHospitalInfo(found);
-              }
-            } catch (e) {
-              console.warn('Error al buscar hospital para teléfono:', e);
+          try {
+            const list = await getHospitales();
+            const found = list.find(h => h.id === data.hospital_id || h.nombre.toLowerCase().includes(data.hospital.toLowerCase()));
+            if (found && active) {
+              setHospitalInfo(found);
             }
+          } catch (e) {
+            console.warn('Error al buscar hospital para teléfono:', e);
           }
-        })
-        .catch(err => {
-          if (active) {
-            setError(err.message || 'Error al cargar detalles del paciente');
-            setLoading(false);
-          }
-        });
+        }
+      })
+      .catch(err => {
+        if (active) {
+          setError(err.message || 'Error al cargar detalles del paciente');
+          setLoading(false);
+        }
+      });
 
-      return () => {
-        active = false;
-      };
-    }, [pacienteId]);
+    return () => {
+      active = false;
+    };
+  }, [pacienteId]);
+
   if (loading) {
     return (
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
@@ -79,9 +78,34 @@ export default function PacienteDetailModal({ pacienteId, onClose, showToast }: 
     );
   }
 
-  // Generar mensaje para WhatsApp con tono venezolano pana
-  const shareText = `¡Buenas noticias pana! Encontré a: ${detail.nombre}, de ${detail.edad !== null ? `${detail.edad} años` : 'edad no anotada'}, en el hospital ${detail.hospital}. Fecha de ingreso: ${detail.ingreso_fecha || 'no anotada'}.`;
+  // Generar mensaje para compartir con tono adecuado y teléfono del hospital
+  const hospitalPhone = hospitalInfo?.telefono ? ` Teléfono del centro: ${hospitalInfo.telefono}.` : '';
+  const shareText = `¡Buenas noticias! Encontré a: ${detail.nombre}, de ${detail.edad !== null ? `${detail.edad} años` : 'edad no anotada'}, en el hospital ${detail.hospital}.${hospitalPhone} Fecha de ingreso: ${detail.ingreso_fecha || 'no anotada'}.\n\nEncontré esta información en www.cuidartevzla.com comparte para ayudar a más personas`;
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+
+  const handleSystemShare = async () => {
+    const shareData = {
+      title: `Información de ${detail.nombre} - Cuídarte Venezuela`,
+      text: shareText,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        showToast('¡Información compartida con éxito!');
+      } else {
+        await navigator.clipboard.writeText(shareText);
+        showToast('¡Información copiada al portapapeles!');
+      }
+    } catch {
+      try {
+        await navigator.clipboard.writeText(shareText);
+        showToast('¡Información copiada!');
+      } catch {
+        // no-op
+      }
+    }
+  };
 
   // Colores de estado
   const stateColorClasses = {
@@ -237,6 +261,17 @@ export default function PacienteDetailModal({ pacienteId, onClose, showToast }: 
             <MessageSquare className="w-5 h-5" />
             <span>COMPARTIR POR WHATSAPP</span>
           </a>
+
+          {/* Botón de Compartir Estándar del Teléfono */}
+          <button
+            id="btn-system-share"
+            onClick={handleSystemShare}
+            className="w-full py-3.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-sky-100 flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
+            style={{ minHeight: '48px' }}
+          >
+            <Share2 className="w-5 h-5" />
+            <span>COMPARTIR EN OTROS MEDIOS</span>
+          </button>
 
           <button
             id="btn-close-modal-bottom"
