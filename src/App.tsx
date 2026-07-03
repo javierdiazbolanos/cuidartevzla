@@ -32,6 +32,7 @@ import {
   Phone,
   Calendar,
   Building,
+  ArrowUp,
   Share2
 } from './icons';
 
@@ -103,6 +104,7 @@ export default function App() {
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
   
   // Modo de Datos Bajos para redes inestables (Venezuela)
   const [dataSaver, setDataSaver] = useState<boolean>(() => isDataSaverEnabled());
@@ -371,6 +373,25 @@ export default function App() {
     };
     fetchStats();
   }, []);
+
+  // Efecto para controlar la visibilidad del botón de volver arriba
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Efecto para enfocar automáticamente el buscador según la pestaña activa
   useEffect(() => {
@@ -1643,6 +1664,22 @@ export default function App() {
         <div id="toast-message" className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-3.5 rounded-2xl text-xs font-semibold shadow-2xl flex items-center gap-2.5 z-50 animate-bounce max-w-sm w-[90vw] text-center border border-slate-800">
           <AlertCircle className="w-4.5 h-4.5 text-sky-400 shrink-0" />
           <span className="flex-1">{toastMsg}</span>
+        </div>
+      )}
+
+      {/* ==================================
+          BOTÓN VOLVER ARRIBA
+         ================================== */}
+      {showScrollTop && (
+        <div className="fixed bottom-22 right-6 z-40 animate-fade-in">
+          <button
+            id="scroll-to-top"
+            onClick={scrollToTop}
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-slate-100 text-slate-700 shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 cursor-pointer border border-slate-200"
+            title="Volver arriba"
+          >
+            <ArrowUp className="w-5 h-5" />
+          </button>
         </div>
       )}
 

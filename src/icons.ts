@@ -1,4 +1,5 @@
 // This file ensures tree-shaking doesn't remove our lucide-icons
+export { ArrowUp } from 'lucide-react';
 export { AlertTriangle } from 'lucide-react';
 export { MessageSquare } from 'lucide-react';
 export { Phone } from 'lucide-react';
