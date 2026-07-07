@@ -76,13 +76,17 @@ export function getApiBase(): Promise<string> {
         return res.json();
       })
       .then((config) => {
-        const base = config.API_BASE || '/api';
+        let base = config.API_BASE || '/api';
+        // Convertir paths relativos a URLs absolutas — necesario para new URL()
+        if (base.startsWith('/')) {
+          base = window.location.origin + base;
+        }
         console.log(`[Cuídarte] Cargada base de API: ${base}`);
         return base;
       })
       .catch((err) => {
         console.warn('[Cuídarte] Falló carga de config.json, usando valor predeterminado "/api"', err);
-        return '/api';
+        return window.location.origin + '/api';
       });
   }
   return apiBasePromise;
@@ -213,7 +217,7 @@ export async function getPacientes(q: string, hospitalId?: number | null): Promi
   } else {
     try {
       const apiBase = await getApiBase();
-      const url = new URL(`${window.location.origin}${apiBase}/pacientes.php`);
+      const url = new URL(`${apiBase}/pacientes.php`);
       url.searchParams.set('q', q);
       if (hospitalId) {
         url.searchParams.set('hospital_id', String(hospitalId));
@@ -300,7 +304,7 @@ export async function getMedicamentos(
   } else {
     try {
       const apiBase = await getApiBase();
-      const url = new URL(`${window.location.origin}${apiBase}/medicamentos.php`);
+      const url = new URL(`${apiBase}/medicamentos.php`);
       url.searchParams.set('q', q);
       if (categoria) url.searchParams.set('categoria', categoria);
       if (hospitalId) url.searchParams.set('hospital_id', String(hospitalId));
@@ -490,7 +494,7 @@ export async function getTransporte(
   } else {
     try {
       const apiBase = await getApiBase();
-      const url = new URL(`${window.location.origin}${apiBase}/transporte.php`);
+      const url = new URL(`${apiBase}/transporte.php`);
       url.searchParams.set('q', q);
       if (ciudad) url.searchParams.set('ciudad', ciudad);
       if (soloDisponibles) url.searchParams.set('solo_disponibles', '1');

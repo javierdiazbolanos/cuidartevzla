@@ -80,6 +80,19 @@ CREATE TABLE transporte (
   KEY idx_nombre_norm (nombre_norm)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE alertas (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  texto VARCHAR(500) NOT NULL,
+  severidad ENUM('critica','alta','media','baja') NOT NULL DEFAULT 'media',
+  activo TINYINT(1) NOT NULL DEFAULT 1,
+  voluntario VARCHAR(50) NOT NULL DEFAULT 'Admin',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_activo (activo),
+  KEY idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Semilla del Directorio Nacional de Hospitales y Centros de Salud de Venezuela
 INSERT INTO hospitales (id, nombre, municipio, lat, lng, telefono) VALUES
 (1, 'Hospital Universitario de Caracas (HUC)', 'Libertador', 10.489700, -66.889400, '(0212) 605-4050'),
@@ -132,3 +145,17 @@ INSERT INTO hospitales (id, nombre, municipio, lat, lng, telefono) VALUES
 (48, 'Sede del Sebin (La Guaira)', 'Vargas', 10.592500, -66.941000, '(0212) 541-7656'),
 (49, 'IVSS — Hospital General de Misiones Nuevas Generaciones Hugo Chávez', 'Libertador', 10.495000, -66.911000, '(0212) 801-1000'),
 (50, 'Clínica Canes', 'Libertador', 10.506400, -66.930900, '(0212) 471-4848');
+
+-- Edificios afectados por el sismo (datos de terremotovenezuela.com)
+CREATE TABLE IF NOT EXISTS edificios (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nombre VARCHAR(255) NOT NULL,
+  tipo_dano ENUM('total', 'severo') NOT NULL,
+  observacion TEXT NULL,
+  enlace VARCHAR(500) NULL,
+  uuid VARCHAR(36) NULL,
+  creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_tipo_dano (tipo_dano),
+  KEY idx_uuid (uuid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
