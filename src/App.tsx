@@ -394,20 +394,17 @@ export default function App() {
   };
 
   // Efecto para enfocar automáticamente el buscador según la pestaña activa
+  // usa requestAnimationFrame para evitar forced reflow en Lighthouse
   useEffect(() => {
-    if (activeTab === 'pacientes') {
-      setTimeout(() => {
+    requestAnimationFrame(() => {
+      if (activeTab === 'pacientes') {
         inputPacientesRef.current?.focus();
-      }, 50);
-    } else if (activeTab === 'insumos') {
-      setTimeout(() => {
+      } else if (activeTab === 'insumos') {
         inputMedicamentosRef.current?.focus();
-      }, 50);
-    } else if (activeTab === 'transporte') {
-      setTimeout(() => {
+      } else if (activeTab === 'transporte') {
         inputTransporteRef.current?.focus();
-      }, 50);
-    }
+      }
+    });
   }, [activeTab]);
 
   // 2. Debounce dinámico de búsqueda de Pacientes (800ms en Datos Bajos para evitar ráfagas de red)
@@ -557,8 +554,10 @@ export default function App() {
       {/* Contenedor de la Aplicación (Centrado, responsivo, Desktop-First max width) */}
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 space-y-4">
         
-        {/* Barra de Avisos de Emergencia y Directorio */}
-        <EmergencyAlerts onTriggerToast={triggerToast} />
+        {/* Barra de Avisos de Emergencia y Directorio — espacio reservado para evitar CLS */}
+        <div className="min-h-[52px]">
+          <EmergencyAlerts onTriggerToast={triggerToast} />
+        </div>
 
         {/* ==================================
             PESTAÑA 1: BÚSQUEDA DE PACIENTES 

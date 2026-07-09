@@ -29,10 +29,11 @@
     <meta name="twitter:description" content="Busca a tus familiares y conocidos afectados por el sismo en Venezuela." />
     <meta name="twitter:image" content="https://qas.cuidartevzla.com/logo_cuidarte.png" />
 
-    <!-- Fuentes: solo Inter, pesos esenciales para bajo ancho de banda -->
+    <!-- Fuentes: Inter pesos esenciales. media="print" → no bloquea render; onload activa -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" /></noscript>
   </head>
   <body class="bg-slate-50 text-slate-900 antialiased selection:bg-sky-200">
     <div id="root"></div>
