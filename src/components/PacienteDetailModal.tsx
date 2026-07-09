@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PacienteDetalle, Hospital } from '../types';
 import { getPacienteDetalle, getHospitales } from '../apiClient';
-import { X, Calendar, Building, MapPin, Share2, AlertTriangle, MessageSquare, Info, Phone } from 'lucide-react';
+import { X, Calendar, Building, MapPin, Share2, AlertTriangle, MessageSquare, Info, Phone } from '../icons';
 
 interface PacienteDetailModalProps {
   pacienteId: number;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getHospitales, getPacientes, getMedicamentos, getTransporte, isDataSaverEnabled, setDataSaverEnabled, clearApiCache, registrarTransporte, actualizarTransporte, eliminarTransporte, getApiBase } from './apiClient';
 import { Hospital, Paciente, Medicamento, Transporte } from './types';
-import { CIUDADES_VENEZUELA } from './mockData';
+import { CIUDADES_VENEZUELA } from './data/ciudades';
 import Header from './components/Header';
 import HospitalComboBox from './components/HospitalComboBox';
 import EmergencyAlerts from './components/EmergencyAlerts';

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   PhoneCall, 
   X,
   ChevronLeft,
   ChevronRight
-} from 'lucide-react';
+} from '../icons';
+import { getApiBase } from '../apiClient';
 
 export interface EmergencyNotice {
   id: string;
@@ -19,20 +20,54 @@ export interface EmergencyContact {
   description: string;
 }
 
-// Valores por defecto orientados al contexto de Venezuela con un tono pana amigable y tuteo
-const DEFAULT_NOTICES: EmergencyNotice[] = [
-  { id: '1', text: '⚠️ SOS Telemedicina UCV (Línea Gratuita de Emergencias Médicas): Llama al (0212) 605-1555 si te sientes mal.', type: 'alert' },
-  { id: '2', text: '📢 ¡Hay buenas noticias! Encontraron Insulina y Analgésicos en farmacias comunitarias autorizadas.', type: 'success' },
-  { id: '3', text: '💡 Consejo: Si estás navegando con 3G o tienes pocos megas, activa ya mismo el "Modo de Datos Bajos" abajo.', type: 'info' },
-  { id: '4', text: '🏥 ¡Tranquilo! Guardamos todos los hospitales en tu teléfono para que los consultes al instante aunque no tengas saldo.', type: 'success' }
-];
-
+// ── Contactos de emergencia (estáticos, rara vez cambian) ──
 const DEFAULT_CONTACTS: EmergencyContact[] = [
   { id: 'c1', name: 'SOS Telemedicina (UCV)', number: '0212-6051555', description: 'Te atienden doctores gratis por teléfono.' },
   { id: 'c2', name: 'Cruz Roja Venezolana', number: '0212-5782187', description: 'Primeros auxilios y reportes de medicinas.' },
   { id: 'c3', name: 'Bomberos de Caracas', number: '0212-5422222', description: 'Emergencias en la capital y zona metropolitana.' },
   { id: 'c4', name: 'Emergencias Nacionales (VEN 911)', number: '911', description: 'Central de llamadas de seguridad del país.' }
 ];
+
+// ── Fallback de notices si no hay alertas en BD ──
+const DEFAULT_NOTICES: EmergencyNotice[] = [
+  { id: 'd1', text: '⚠️ SOS Telemedicina UCV (Línea Gratuita de Emergencias Médicas): Llama al (0212) 605-1555 si te sientes mal.', type: 'alert' },
+  { id: 'd2', text: '📢 ¡Hay buenas noticias! Encontraron Insulina y Analgésicos en farmacias comunitarias autorizadas.', type: 'success' },
+];
+
+// ── Mapeo severidad → tipo de notice ──
+function severidadToType(s: string): EmergencyNotice['type'] {
+  switch (s) {
+    case 'critica':
+    case 'alta':   return 'alert';
+    case 'media':  return 'info';
+    case 'baja':   return 'success';
+    default:       return 'info';
+  }
+}
+
+interface AlertaFromDB {
+  id: number;
+  texto: string;
+  severidad: string;
+  voluntario: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// ── Tiempo relativo para mostrar ──
+function relativeTime(ts: string): string {
+  const now = Date.now();
+  const then = new Date(ts).getTime(); // MySQL timestamp as UTC
+  const diffMin = Math.floor((now - then) / 60000);
+  if (diffMin < 1) return 'Ahora';
+  if (diffMin < 60) return `Hace ${diffMin}m`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `Hace ${diffH}h`;
+  const diffD = Math.floor(diffH / 24);
+  return `Hace ${diffD}d`;
+}
+
+const POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutos
 
 interface EmergencyAlertsProps {
   onTriggerToast: (msg: string) => void;
@@ -41,13 +76,12 @@ interface EmergencyAlertsProps {
 export default function EmergencyAlerts({ onTriggerToast }: EmergencyAlertsProps) {
   const [notices, setNotices] = useState<EmergencyNotice[]>([]);
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   
-  // Interfaz de navegación / colapsos
   const [showDirectory, setShowDirectory] = useState(false);
   const [currentNoticeIndex, setCurrentNoticeIndex] = useState(0);
-
-  // Soporte para gestos de deslizamiento (Swipe) con el dedo en móviles (sin librerías pesadas)
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const handleNext = () => {
     if (notices.length <= 1) return;
@@ -59,65 +93,131 @@ export default function EmergencyAlerts({ onTriggerToast }: EmergencyAlertsProps
     setCurrentNoticeIndex(prev => (prev - 1 + notices.length) % notices.length);
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX);
-  };
-
+  const handleTouchStart = (e: React.TouchEvent) => setTouchStartX(e.touches[0].clientX);
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX === null) return;
-    const touchEndX = e.changedTouches[0].clientX;
-    const diffX = touchStartX - touchEndX;
-
-    // Umbral de 50px para detectar deslizamiento
-    if (diffX > 50) {
-      handleNext();
-      onTriggerToast('Mostrando siguiente aviso');
-    } else if (diffX < -50) {
-      handlePrev();
-      onTriggerToast('Mostrando aviso anterior');
-    }
+    const diffX = touchStartX - e.changedTouches[0].clientX;
+    if (diffX > 50) { handleNext(); onTriggerToast('Mostrando siguiente aviso'); }
+    else if (diffX < -50) { handlePrev(); onTriggerToast('Mostrando aviso anterior'); }
     setTouchStartX(null);
   };
 
-  // 1. Cargar datos iniciales desde localStorage o Defaults para resiliencia offline completa
-  useEffect(() => {
-    let savedNotices = DEFAULT_NOTICES;
-    let savedContacts = DEFAULT_CONTACTS;
-    
-    if (typeof window !== 'undefined') {
-      try {
-        const localN = localStorage.getItem('cuidarte_notices');
-        if (localN) savedNotices = JSON.parse(localN);
+  // ==========================================
+  // fetchAlertas — consulta la BD via alertas.php
+  // ==========================================
+  const fetchAlertas = async () => {
+    try {
+      const apiBase = await getApiBase();
+      const res = await fetch(`${apiBase}/alertas.php`);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const json = await res.json();
+      
+      if (json.ok && Array.isArray(json.data)) {
+        const alertas: AlertaFromDB[] = json.data;
         
-        const localC = localStorage.getItem('cuidarte_contacts');
-        if (localC) savedContacts = JSON.parse(localC);
-      } catch (e) {
-        console.warn('Error leyendo avisos locales:', e);
+        if (alertas.length > 0) {
+          const mapped: EmergencyNotice[] = alertas.map(a => ({
+            id: String(a.id),
+            text: `${a.texto} — ${relativeTime(a.created_at)}`,
+            type: severidadToType(a.severidad),
+          }));
+          setNotices(mapped);
+          setLastUpdated(new Date().toLocaleTimeString('es-VE'));
+          // Guardar en localStorage para siguiente carga instantánea
+          localStorage.setItem('cuidarte_notices', JSON.stringify(mapped));
+          return;
+        }
       }
+    } catch (err) {
+      console.warn('[Alertas] Backend no disponible:', err);
     }
     
-    setNotices(savedNotices);
-    setContacts(savedContacts);
+    // Fallback: localStorage → defaults
+    try {
+      const cached = localStorage.getItem('cuidarte_notices');
+      if (cached) {
+        setNotices(JSON.parse(cached));
+        return;
+      }
+    } catch {}
+    setNotices(DEFAULT_NOTICES);
+  };
+
+  // ==========================================
+  // 1. Carga inicial: localStorage (instantáneo) + backend
+  // ==========================================
+  useEffect(() => {
+    // Cargar contacts de localStorage o defaults
+    try {
+      const c = localStorage.getItem('cuidarte_contacts');
+      setContacts(c ? JSON.parse(c) : DEFAULT_CONTACTS);
+    } catch {
+      setContacts(DEFAULT_CONTACTS);
+    }
+
+    // Cargar notices de localStorage (instantáneo)
+    try {
+      const n = localStorage.getItem('cuidarte_notices');
+      if (n) setNotices(JSON.parse(n));
+    } catch {}
+    
+    // Fetch de BD (sobrescribe si hay datos)
+    fetchAlertas();
+
+    // Cleanup
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, []);
 
-  // 2. Rotación automática del Ticker cada 6 segundos, se reinicia cada vez que cambia el índice o hay interacción manual
+  // ==========================================
+  // 2. Polling cada 5 minutos
+  // ==========================================
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      fetchAlertas();
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
+
+  // ==========================================
+  // 3. Cross-tab sync via storage event
+  // ==========================================
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'cuidarte_notices' && e.newValue) {
+        try { setNotices(JSON.parse(e.newValue)); } catch {}
+      }
+      if (e.key === 'cuidarte_contacts' && e.newValue) {
+        try { setContacts(JSON.parse(e.newValue)); } catch {}
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  // ==========================================
+  // 4. Rotación automática cada 6 segundos
+  // ==========================================
   useEffect(() => {
     if (notices.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentNoticeIndex(prev => (prev + 1) % notices.length);
     }, 6000);
     return () => clearInterval(interval);
-  }, [notices, currentNoticeIndex]);
+  }, [notices]);
 
   const activeNotice = notices[currentNoticeIndex];
 
   return (
     <div id="emergency-alerts-root" className="w-full space-y-3">
       
-      {/* 1. TICKER AUTOMÁTICO DE NOTICIAS DE EMERGENCIA CON SWIPE INTEGRADO */}
+      {/* TICKER AUTOMÁTICO */}
       {notices.length > 0 && activeNotice && (
         <div 
-          id="emergency-ticker-banner"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           className={`relative overflow-hidden rounded-2xl border px-3 sm:px-4 py-3 shadow-sm transition-all duration-300 flex items-center justify-between gap-2.5 sm:gap-3 ${
@@ -129,83 +229,38 @@ export default function EmergencyAlerts({ onTriggerToast }: EmergencyAlertsProps
           }`}
           title="Desliza horizontalmente para ver más avisos"
         >
-          {/* Luz intermitente de alerta */}
           <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-            <span className="relative flex h-3 w-3 shrink-0">
-              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                activeNotice.type === 'alert' 
-                  ? 'bg-rose-500' 
-                  : activeNotice.type === 'success'
-                    ? 'bg-sky-500'
-                    : 'bg-amber-500'
+            <span className={`animate-ping inline-flex rounded-full h-3 w-3 shrink-0 opacity-75 ${
+                activeNotice.type === 'alert' ? 'bg-rose-500' : activeNotice.type === 'success' ? 'bg-sky-500' : 'bg-amber-500'
               }`} />
-              <span className={`relative inline-flex rounded-full h-3 w-3 ${
-                activeNotice.type === 'alert' 
-                  ? 'bg-rose-600' 
-                  : activeNotice.type === 'success'
-                    ? 'bg-sky-600'
-                    : 'bg-amber-600'
-              }`} />
-            </span>
-            
-            {/* Mensaje de la noticia */}
             <div className="flex-1 text-xs sm:text-sm font-bold leading-snug tracking-tight">
               <p className="line-clamp-2 sm:line-clamp-1">{activeNotice.text}</p>
             </div>
           </div>
 
-          {/* Botones de acción del Ticker y flechas de navegación táctiles */}
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-1">
             {notices.length > 1 && (
               <div className="flex items-center bg-white/75 border border-slate-200/50 rounded-xl p-0.5 shadow-xs">
-                {/* Flecha Izquierda */}
-                <button
-                  id="btn-prev-notice"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePrev();
-                  }}
+                <button onClick={(e) => { e.stopPropagation(); handlePrev(); }}
                   className="p-1 rounded-lg hover:bg-slate-100 text-slate-700 active:scale-90 transition-all cursor-pointer flex items-center justify-center"
-                  style={{ minWidth: '36px', minHeight: '36px' }}
-                  title="Mensaje anterior"
-                >
+                  style={{ minWidth: '36px', minHeight: '36px' }} title="Mensaje anterior">
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-
-                {/* Contador */}
                 <span className="text-[10px] font-mono font-bold px-1 min-w-[28px] text-center text-slate-800 select-none">
                   {currentNoticeIndex + 1}/{notices.length}
                 </span>
-
-                {/* Flecha Derecha */}
-                <button
-                  id="btn-next-notice"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleNext();
-                  }}
+                <button onClick={(e) => { e.stopPropagation(); handleNext(); }}
                   className="p-1 rounded-lg hover:bg-slate-100 text-slate-700 active:scale-90 transition-all cursor-pointer flex items-center justify-center"
-                  style={{ minWidth: '36px', minHeight: '36px' }}
-                  title="Siguiente mensaje"
-                >
+                  style={{ minWidth: '36px', minHeight: '36px' }} title="Siguiente mensaje">
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             )}
             
-            {/* Botón para abrir directorio rápido */}
-            <button
-              id="btn-toggle-quick-directory"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDirectory(!showDirectory);
-              }}
+            <button onClick={(e) => { e.stopPropagation(); setShowDirectory(!showDirectory); }}
               className={`p-2 rounded-xl hover:bg-white/60 cursor-pointer transition-colors text-xs font-bold flex items-center justify-center gap-1 border border-transparent ${
                 showDirectory ? 'bg-white/80 border-slate-200 text-sky-800' : 'text-slate-600'
-              }`}
-              style={{ minHeight: '38px', minWidth: '38px' }}
-              title="Directorio de emergencia"
-            >
+              }`} style={{ minHeight: '38px', minWidth: '38px' }} title="Directorio de emergencia">
               <PhoneCall className="w-4 h-4 shrink-0" />
               <span className="hidden md:inline">Teléfonos</span>
             </button>
@@ -213,42 +268,31 @@ export default function EmergencyAlerts({ onTriggerToast }: EmergencyAlertsProps
         </div>
       )}
 
-      {/* 2. DIRECTORIO TELEFÓNICO DE EMERGENCIA (COLAPSIBLE) */}
+      {/* DIRECTORIO TELEFÓNICO */}
       {showDirectory && (
-        <div 
-          id="emergency-directory-panel"
-          className="bg-white border border-slate-200 rounded-2xl p-4 shadow-md animate-in fade-in slide-in-from-top-1 duration-200 space-y-3"
-        >
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-md animate-in fade-in slide-in-from-top-1 duration-200 space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
             <h3 className="text-sm font-extrabold text-slate-950 flex items-center gap-2">
               <PhoneCall className="w-4 h-4 text-sky-600 animate-pulse" />
               Números de Emergencia para la Comunidad
             </h3>
-            <button
-              onClick={() => setShowDirectory(false)}
-              className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors"
-            >
+            <button onClick={() => setShowDirectory(false)}
+              className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors">
               <X className="w-4 h-4" />
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {contacts.map(c => (
-              <div 
-                key={c.id} 
-                className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex items-center justify-between gap-3 hover:border-sky-100 transition-colors"
-              >
+              <div key={c.id} 
+                className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex items-center justify-between gap-3 hover:border-sky-100 transition-colors">
                 <div className="min-w-0 flex-1">
                   <p className="text-xs sm:text-sm font-extrabold text-slate-900 truncate">{c.name}</p>
                   <p className="text-[11px] text-slate-500 leading-tight mt-0.5">{c.description}</p>
                 </div>
-                
-                {/* Enlace tel: directo que funciona en teléfonos celulares */}
-                <a
-                  href={`tel:${c.number.replace(/\s+/g, '')}`}
+                <a href={`tel:${c.number.replace(/\s+/g, '')}`}
                   className="bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shrink-0 shadow-sm shadow-sky-100 active:scale-95 transition-all cursor-pointer"
-                  style={{ minHeight: '38px' }}
-                >
+                  style={{ minHeight: '38px' }}>
                   <PhoneCall className="w-3.5 h-3.5" />
                   <span>{c.number}</span>
                 </a>

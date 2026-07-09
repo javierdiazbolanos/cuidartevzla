@@ -4,7 +4,15 @@
  */
 
 import { Hospital, Paciente, PacienteDetalle, Insumo, Medicamento, Transporte, Edificio } from './types';
-import { MOCK_HOSPITALES, MOCK_PACIENTES, MOCK_INSUMOS, MOCK_TRANSPORTE } from './mockData';
+
+// Mock data deshabilitado en favor de datos reales de la API.
+// Si la API falla, se muestra "sin resultados" en vez de datos falsos.
+// Para desarrollo/testing local: descomentar la línea de abajo y comentar los arrays vacíos.
+// import { MOCK_HOSPITALES, MOCK_PACIENTES, MOCK_INSUMOS, MOCK_TRANSPORTE } from './mockData';
+const MOCK_HOSPITALES: Hospital[] = [];
+const MOCK_PACIENTES: Paciente[] = [];
+const MOCK_INSUMOS: Insumo[] = [];
+const MOCK_TRANSPORTE: Transporte[] = [];
 
 const MOCK_MEDICAMENTOS = MOCK_INSUMOS;
 

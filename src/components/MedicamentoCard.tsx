@@ -1,6 +1,6 @@
 import React from 'react';
 import { Medicamento } from '../types';
-import { Pill, Building, Layers, Eye } from 'lucide-react';
+import { Pill, Building, Layers, Eye } from '../icons';
 
 interface MedicamentoCardProps {
   key?: React.Key;
